@@ -18,6 +18,7 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
+    "@script-studio/contracts": "workspace:*",
     "@script-studio/domain": "workspace:*"
   },
   "devDependencies": {
