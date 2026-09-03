@@ -3790,6 +3790,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：node-postgres 的 transaction 状态绑定单个 client，使用 `pool.query` 分发 `BEGIN`/查询会破坏事务隔离，遗忘 release 会耗尽连接池。Stage 3G 冻结 `PostgresTransactionProviderPort` 的 open/release 生命周期与 `PgTransactionProvider`：每次事务从 `Pool.connect()` checkout 一个 client，所有语句走同一 client，`PostgresTransactionalHierarchyRepository` 在 commit/rollback 后 finally release；连接池和 TLS 只接受服务端配置，不接受请求输入。当前先通过可注入 fake pool 验证生命周期，真实数据库/RLS 运行仍待外部环境。
 
+### ADR-119：离线 SQLite 只缓存层级快照与 Draft outbox
+
+状态：Accepted
+
+原因：本地离线能力必须提升恢复性，但不能形成第二个云端权威或绕过审批/权限。Stage 3H 新增 `@script-studio/infra-sqlite-cache`：SQLite 只按 Team/Project 保存 hierarchy 快照，outbox 只接受明确的 `draft-update` payload，以 `(team_id, operation, idempotency_key)` 去重；claim/ack/fail 和 in-flight recovery 使用本地事务与重试上限，token 不入库，审批、Promotion、membership 和永久删除不在离线接口中。云端 PostgreSQL/对象存储仍是最终权威，真实重连同步留待后续门禁。
+
 ---
 
 ## 23. 实施状态
@@ -3851,6 +3857,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3E OIDC RS256 verifier | 进行中（固定配置 verifier 切片已完成） | 新增独立 `@script-studio/infra-oidc`：固定 issuer/audience/JWKS、RS256/RSA `kid` 校验、签名与时间 claims 验证、Team/member 映射、JWKS cache/key rotation refresh 和 token/header 安全拒绝已冻结。5 项 RSA verifier 测试、全 workspace 60 个测试文件 / 378 项测试、类型检查、构建、发行包审计和格式检查通过；真实 issuer discovery、nonce、token rotation/撤销、HTTP composition 和 IdP 留待后续门禁。 |
 | Script Studio v2 Stage 3F API HTTP composition | 进行中（无框架 adapter 切片已完成） | 新增 `createScriptStudioHttpHandler`：Node request 到稳定 API request 的 pathname/header/requestId 转换、JSON/no-store 响应和安全异常屏障已冻结。7 项 service-api 测试、全 workspace 61 个测试文件 / 381 项测试、类型检查、构建、发行包审计和格式检查通过；TLS/代理/限流、真实数据库/IdP、部署与 observability 留待后续门禁。 |
 | Script Studio v2 Stage 3G PostgreSQL driver 生命周期 | 进行中（driver 生命周期切片已完成） | `pg@8.23.0` 的 `PgTransactionProvider` 使用同一 checked-out client 执行 transaction port，并在 commit/rollback 后统一 release；9 项 infra-postgres 测试、全 workspace 61 个测试文件 / 382 项测试、类型检查、构建、发行包审计和格式检查通过。真实 PostgreSQL/RLS、TLS、migration、外部连接配置与生产 composition 留待后续门禁。 |
+| Script Studio v2 Stage 3H SQLite cache/outbox | 进行中（设计已冻结） | 计划新增独立 `@script-studio/infra-sqlite-cache`：Team/Project hierarchy 快照、Draft-only payload、幂等 outbox、原子 claim/ack/fail、in-flight recovery 与 retry cap；真实云端重连同步、PostgreSQL/RLS、对象存储和部署留待后续门禁。 |
 
 ---
 

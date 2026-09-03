@@ -114,7 +114,7 @@
 
 ### Stage 3：云端单用户权威
 
-状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片、hierarchy query/transaction port、OIDC RS256 verifier、HTTP composition 与 node-postgres client lifecycle 已完成本地门禁；下一切片为真实 PostgreSQL/RLS 与生产 composition 接线。尚未连接真实云数据库、对象存储或 IdP。
+状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片、hierarchy query/transaction port、OIDC RS256 verifier、HTTP composition 与 node-postgres client lifecycle 已完成本地门禁；下一切片为 SQLite cache/outbox。尚未连接真实云数据库、对象存储或 IdP。
 
 范围：
 
@@ -178,6 +178,7 @@
 - 将固定配置的 verifier 与事务化 hierarchy repository 接入同一生产 composition，保持 Team scope 只来自 verified session；
 - 用 node-postgres 的同一 checked-out client 执行单事务，并在所有路径 release；pool.query 仅允许单语句非事务场景；
 - 在具备外部服务配置时接入 issuer discovery、token rotation、撤销策略和真实 PostgreSQL RLS；
+- 将 SQLite outbox 接入 API 重连同步与服务端 idempotency 响应；
 - token rotation、真实云 API 部署和生产 observability 留待具备外部服务配置的后续门禁；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。
 

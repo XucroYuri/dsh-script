@@ -135,6 +135,8 @@ HTTP composition 只把 Node `IncomingMessage` 转换成稳定 `ScriptStudioApiR
 - 重连先刷新权限与锁定状态，再重放 outbox；
 - 本地缓存损坏不得影响云端权威数据。
 
+Stage 3 的 SQLite cache/outbox 只持久化按 `(team_id, project_id)` 隔离的 hierarchy 快照和 `draft-update` payload；不保存 access/refresh token。outbox 以 `(team_id, operation, idempotency_key)` 去重，claim 使用 SQLite 写事务从 pending 原子转为 in-flight，服务重启将未完成 claim 恢复为 pending；ack 删除已被云端接受的请求，失败按 bounded retry/backoff 重新排队，超过上限进入 failed。该层不提供 approval、Promotion、membership 或永久删除操作。
+
 ## 9. 安全、隐私与运维
 
 - 传输 TLS，数据库和对象存储静态加密；
