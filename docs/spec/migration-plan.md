@@ -133,7 +133,7 @@
 - 应用会话通过 transaction-local `app.team_id` / `app.member_id` 注入数据库上下文，数据库不信任插件或 Client 自报的 Team；
 - 本切片只验证迁移文本与约束形状；真实 PostgreSQL 部署、对象存储、OIDC 和 API 事务测试留在后续切片。
 
-下一切片：
+当前下一切片：
 
 - 实现不可变内容对象的 SHA-256、不可猜测 Team-scoped object key 与 pending/ready/failed 生命周期；
 - 将对象状态与 Version/Approval 的事务引用边界写入共享 contract，不允许 ready 前进入批准链；
