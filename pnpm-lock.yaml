@@ -98,6 +98,25 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)
 
+  packages/infra-oidc:
+    dependencies:
+      '@script-studio/contracts':
+        specifier: workspace:*
+        version: link:../script-contracts
+      '@script-studio/domain':
+        specifier: workspace:*
+        version: link:../script-domain
+    devDependencies:
+      '@types/node':
+        specifier: ^24.3.0
+        version: 24.13.3
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)
+
   packages/infra-postgres:
     dependencies:
       '@script-studio/contracts':

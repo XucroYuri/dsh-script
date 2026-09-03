@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@script-studio/contracts": ["../script-contracts/src/index.ts"],
+      "@script-studio/domain": ["../script-domain/src/index.ts"]
+    }
+  },
+  "include": ["src", "tests"]
+}
