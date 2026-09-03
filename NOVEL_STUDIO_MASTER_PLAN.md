@@ -3754,6 +3754,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：云协作的安全边界必须在业务 API 和对象存储接入前固定，否则跨 Team 引用、重放和 outbox 可能在后续实现中形成无法回滚的旁路。Stage 3 首切片新增独立 `@script-studio/infra-postgres`，以事务 migration 建立 Team/IP/Project/Season/Episode/Sequence/Scene/Beat、Content Object、Audit、Idempotency 和 Outbox 的基础表；层级外键带同一个 `team_id`，租户表启用并强制 RLS，数据库上下文使用 transaction-local `app.team_id` / `app.member_id`。本地静态 SQL 门禁不等同于已部署 PostgreSQL；真实连接、对象存储和 OIDC 由后续切片验收。
 
+### ADR-113：不可变对象以 hash 校验和 put-if-absent 作为内容边界
+
+状态：Accepted
+
+原因：Version/Approval 只能引用内容权威对象，不能把一次上传成功或用户标题当作内容完整性证明。Stage 3B 新增共享 `ImmutableObjectStorePort` 与独立 `@script-studio/infra-object-store`：对象 key 固定包含 Team、stable object ID 和 SHA-256，不包含标题；登记后只允许 pending 对象以实际 hash/size 校验进入 ready，失败进入 failed，ready/failed 不可重写。当前只完成宿主无关 hash/lifecycle contract，S3 适配、签名 URL、数据库事务和恢复演练仍待后续切片。
+
 ---
 
 ## 23. 实施状态
@@ -3809,6 +3815,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 1 纯核心与应用契约 | 已完成 | 四个切片完成 hierarchy、Draft/Version/Approval/Project Canon、IP Promotion/Bible、Cross-IP Grant、Audit/Event、原子幂等与 Authoring/Governance Repository contract suites；Version approve/reject 与 Promotion approve/reject 均闭环。最终 46 个测试文件 / 343 项测试、类型检查、JS/d.ts 构建、运行时 exports、历史 pack audit、纯核心隔离、历史 Bundle 零差异和文档门通过。验证报告位于 `docs/verification/stage-1-2026-09-03.md`。 |
 | Script Studio v2 Stage 2 双宿主最小垂直闭环 | 已完成 | `Host Contract v1`、共享 `DevHostApi`、Codex marketplace/Skills/MCP、DSH Bundle/Host service/Client Slot、parity contract 与本地 fixture 已完成。Codex `0.150.1` 官方 marketplace add/list、MCP smoke、remove；DSH `0.1.0-rc.7` 官方 composition、Host route、tool smoke、Client 加载、卸载，以及 exact `.tgz` 安装均通过。全 workspace `pnpm check`、51 个测试文件 / 356 项测试、build、历史及 DSH pack audit、格式检查通过。验证报告位于 `docs/verification/stage-2-2026-09-03.md`；PostgreSQL、对象存储、生产认证和 CRDT 未提前实现。 |
 | Script Studio v2 Stage 3A PostgreSQL authority foundation | 进行中（首切片已完成） | 新增 `@script-studio/infra-postgres` 与 `0001_cloud_authority`：租户层级、复合 Team 外键、Content Object 引用、Audit、Idempotency、Outbox、RLS/强制 RLS 和 transaction-local session settings 已冻结。4 项 migration shape tests、类型检查和构建通过；本机无 `psql`，Docker daemon 不可用，真实 PostgreSQL 执行留待有运行环境的后续门禁。 |
+| Script Studio v2 Stage 3B 不可变对象生命周期契约 | 进行中（契约切片已完成） | 新增 `@script-studio/infra-object-store` 与 `@script-studio/contracts/object-store`：SHA-256、Team-scoped object key、put-if-absent/read 端口和 pending/ready/failed 生命周期已冻结。4 项生命周期测试、类型检查和构建通过；真实 S3/兼容对象存储、签名 URL、数据库事务与恢复演练留待后续门禁。 |
 
 ---
 

@@ -114,7 +114,7 @@
 
 ### Stage 3：云端单用户权威
 
-状态：进行中（2026-09-03）。PostgreSQL authority foundation 首切片已完成静态门禁；下一切片为对象内容生命周期。尚未连接真实云数据库或对象存储。
+状态：进行中（2026-09-03）。PostgreSQL authority foundation 与不可变对象生命周期契约切片已完成本地门禁；下一切片为云 API/认证事务接入。尚未连接真实云数据库或对象存储。
 
 范围：
 
@@ -133,10 +133,16 @@
 - 应用会话通过 transaction-local `app.team_id` / `app.member_id` 注入数据库上下文，数据库不信任插件或 Client 自报的 Team；
 - 本切片只验证迁移文本与约束形状；真实 PostgreSQL 部署、对象存储、OIDC 和 API 事务测试留在后续切片。
 
-当前下一切片：
+当前已完成的第二个切片：
 
-- 实现不可变内容对象的 SHA-256、不可猜测 Team-scoped object key 与 pending/ready/failed 生命周期；
-- 将对象状态与 Version/Approval 的事务引用边界写入共享 contract，不允许 ready 前进入批准链；
+- `@script-studio/infra-object-store` 实现不可变内容对象的 SHA-256、不可猜测 Team-scoped object key 与 pending/ready/failed 生命周期；
+- 共享 `ImmutableObjectStorePort` 固定 put-if-absent/read 边界，对象状态与 Version/Approval 的 ready 前置条件可被 Application 复用；
+- 生命周期测试覆盖 hash/size 不匹配、failed/ready 不可重写和标题不进入 object key。
+
+下一切片：
+
+- 建立云 API 的 OIDC/OAuth 2.1 会话解析、Team scope 和稳定 DTO；
+- 用 PostgreSQL transaction port 接入 hierarchy/Season 命令，并把 verified session settings 与 Application 授权连通；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。
 
 退出门：
