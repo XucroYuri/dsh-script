@@ -12,6 +12,7 @@
       "types": "./src/governance.ts",
       "default": "./lib/governance.js"
     },
+    "./testing/authoring-repository-contract": "./testing/authoring-repository-contract.ts",
     "./testing/governance-repository-contract": "./testing/governance-repository-contract.ts"
   },
   "scripts": {

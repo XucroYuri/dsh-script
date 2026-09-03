@@ -62,8 +62,21 @@ export class MemoryTransaction implements AuthoringTransactionPort, GovernanceTr
   async getContentObject(teamId: TeamId, contentObjectId: ContentObjectMetadata['id']): Promise<ContentObjectMetadata | null> { const object = this.contentObjects.get(contentObjectId); return object?.teamId === teamId ? object : null }
   async saveDraft(draft: Draft): Promise<void> { this.drafts.set(draft.id, draft) }
   async getVersion(teamId: TeamId, versionId: ManuscriptVersion['id']): Promise<ManuscriptVersion | null> { const version = this.versions.get(versionId); return version?.teamId === teamId ? version : null }
-  async saveVersion(version: ManuscriptVersion): Promise<void> { this.versions.set(version.id, version) }
-  async saveEpisode(episode: ProjectHierarchy['episodes'][number]): Promise<void> { this.hierarchy = { ...this.hierarchy, episodes: this.hierarchy.episodes.map(current => current.id === episode.id ? episode : current) } }
+  async saveVersion(version: ManuscriptVersion): Promise<void> {
+    const existing = this.versions.get(version.id)
+    if (existing && JSON.stringify(existing) !== JSON.stringify(version)) throw new DomainError('invalid-state', 'Stored Manuscript Version is immutable.')
+    this.versions.set(version.id, Object.freeze(structuredClone(version)))
+  }
+  async saveEpisode(episode: ProjectHierarchy['episodes'][number]): Promise<void> {
+    for (const versionId of [episode.currentDraftVersionId, episode.currentApprovedVersionId]) {
+      if (!versionId) continue
+      const version = this.versions.get(versionId)
+      if (!version || version.teamId !== this.hierarchy.team.id || version.projectId !== episode.projectId || version.episodeId !== episode.id) {
+        throw new DomainError('invalid-state', 'Episode Version pointer must reference a stored Version in the same Team, Project and Episode.')
+      }
+    }
+    this.hierarchy = { ...this.hierarchy, episodes: this.hierarchy.episodes.map(current => current.id === episode.id ? structuredClone(episode) : current) }
+  }
   async saveApproval(approval: Approval): Promise<void> { this.approvals.push(approval) }
   async saveProjectCanonFacts(facts: readonly ProjectCanonFact[]): Promise<void> { if (this.failOn === 'saveProjectCanonFacts') throw new Error('injected canon failure'); this.canonFacts.push(...facts) }
   async getIp(teamId: TeamId, ipId: Ip['id']): Promise<Ip | null> { const ip = this.ips.get(ipId); return ip?.teamId === teamId ? ip : null }
@@ -87,11 +100,11 @@ export class MemoryUnitOfWork implements AuthoringUnitOfWorkPort {
 
   async execute<Result>(operation: (transaction: AuthoringTransactionPort) => Promise<Result>): Promise<Result> {
     const snapshot = {
-      hierarchy: this.transaction.hierarchy,
-      drafts: new Map(this.transaction.drafts), contentObjects: new Map(this.transaction.contentObjects), versions: new Map(this.transaction.versions),
-      approvals: [...this.transaction.approvals], canonFacts: [...this.transaction.canonFacts], ips: new Map(this.transaction.ips),
-      promotions: new Map(this.transaction.promotions), bibleEntries: [...this.transaction.bibleEntries], selectionSnapshots: new Map(this.transaction.selectionSnapshots), grants: new Map(this.transaction.grants), audits: [...this.transaction.audits],
-      events: [...this.transaction.events], idempotency: new Map(this.transaction.idempotency),
+      hierarchy: structuredClone(this.transaction.hierarchy),
+      drafts: structuredClone(this.transaction.drafts), contentObjects: structuredClone(this.transaction.contentObjects), versions: structuredClone(this.transaction.versions),
+      approvals: structuredClone(this.transaction.approvals), canonFacts: structuredClone(this.transaction.canonFacts), ips: structuredClone(this.transaction.ips),
+      promotions: structuredClone(this.transaction.promotions), bibleEntries: structuredClone(this.transaction.bibleEntries), selectionSnapshots: structuredClone(this.transaction.selectionSnapshots), grants: structuredClone(this.transaction.grants), audits: structuredClone(this.transaction.audits),
+      events: structuredClone(this.transaction.events), idempotency: structuredClone(this.transaction.idempotency),
     }
     try {
       return await operation(this.transaction)

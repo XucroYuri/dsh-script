@@ -22,6 +22,7 @@ import {
   createManuscriptVersionFromDraft,
   createProjectCanonFact,
   proposeIpPromotion,
+  rejectManuscriptVersion,
   revokeCrossIpGrant,
   submitDraft,
   type Approval,
@@ -80,9 +81,18 @@ describe('approval, Project Canon and IP boundaries', () => {
   it('blocks Canon before approval and detects Episode revision drift', () => {
     const value = hierarchy()
     const frozen = version()
-    const pending: Approval = { id: asApprovalId('approval-1'), teamId: value.team.id, projectId: value.project.id, episodeId: value.episodes[0]!.id, versionId: frozen.id, status: 'pending', decidedBy: null, decidedAt: null, idempotencyKey: asIdempotencyKey('approve-1') }
+    const pending: Approval = { id: asApprovalId('approval-1'), teamId: value.team.id, projectId: value.project.id, episodeId: value.episodes[0]!.id, versionId: frozen.id, status: 'pending', decisionNote: '', decidedBy: null, decidedAt: null, idempotencyKey: asIdempotencyKey('approve-1') }
     expect(() => createProjectCanonFact({ id: asProjectCanonFactId('fact-1'), approval: pending, version: frozen, ipId: value.ip.id, subject: '主角', predicate: '抵达', value: '雾港', evidence: '证据', createdAt: 'now' })).toThrow('approved')
     expect(() => approveManuscriptVersion({ episode: value.episodes[0]!, version: frozen, approvalId: asApprovalId('approval-1'), actorId: asMemberId('member-reviewer'), decidedAt: 'now', expectedEpisodeRevision: 0, idempotencyKey: asIdempotencyKey('approve-1') })).toThrow('revision')
+  })
+
+  it('rejects a Version with a required revision note and never creates Canon', () => {
+    const value = hierarchy()
+    const frozen = version()
+    const rejected = rejectManuscriptVersion({ episode: value.episodes[0]!, version: frozen, approvalId: asApprovalId('approval-reject'), actorId: asMemberId('member-reviewer'), decisionNote: '需要重写结尾冲突。', decidedAt: 'now', expectedEpisodeRevision: 1, idempotencyKey: asIdempotencyKey('reject-1') })
+    expect(rejected).toMatchObject({ episode: { status: 'draft', revision: 2, currentDraftVersionId: frozen.id, currentApprovedVersionId: null }, approval: { status: 'rejected', decisionNote: '需要重写结尾冲突。' } })
+    expect(() => createProjectCanonFact({ id: asProjectCanonFactId('fact-reject'), approval: rejected.approval, version: frozen, ipId: value.ip.id, subject: '主角', predicate: '抵达', value: '雾港', evidence: '证据', createdAt: 'now' })).toThrow('approved')
+    expect(() => rejectManuscriptVersion({ episode: value.episodes[0]!, version: frozen, approvalId: asApprovalId('approval-empty'), actorId: asMemberId('member-reviewer'), decisionNote: ' ', decidedAt: 'now', expectedEpisodeRevision: 1, idempotencyKey: asIdempotencyKey('reject-empty') })).toThrow('decisionNote')
   })
 
   it('requires explicit same-Team Promotion and rejects cross-Team Grants', () => {

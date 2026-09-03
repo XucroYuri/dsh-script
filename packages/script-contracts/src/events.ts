@@ -27,5 +27,6 @@ export type ScriptStudioEvent =
   | EventEnvelope<'draft.submitted', { projectId: ProjectId; episodeId: EpisodeId; draftId: DraftId; draftRevision: number }>
   | EventEnvelope<'manuscript-version.created', { projectId: ProjectId; episodeId: EpisodeId; draftId: DraftId; versionId: VersionId; contentHash: string }>
   | EventEnvelope<'manuscript-version.approved', { projectId: ProjectId; episodeId: EpisodeId; versionId: VersionId; approvalId: ApprovalId }>
+  | EventEnvelope<'manuscript-version.rejected', { projectId: ProjectId; episodeId: EpisodeId; versionId: VersionId; approvalId: ApprovalId; decisionNote: string }>
   | EventEnvelope<'project-canon.committed', { projectId: ProjectId; episodeId: EpisodeId; versionId: VersionId; factIds: readonly ProjectCanonFactId[] }>
   | EventEnvelope<'audit.appended', { auditEventIds: readonly AuditEventId[] }>

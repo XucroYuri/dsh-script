@@ -83,6 +83,25 @@ describe('IP Promotion application', () => {
     expect(unitOfWork.transaction.bibleEntries).toHaveLength(0)
     expect(unitOfWork.transaction.events.slice(-3).map(event => event.type)).toEqual(['permission.denied', 'operation.conflict', 'operation.conflict'])
   })
+
+  it('rejects a proposed Promotion without creating an IP Bible Entry', async () => {
+    const unitOfWork = new MemoryGovernanceUnitOfWork(), ids = new DeterministicIds(), fact = seedCanon(unitOfWork)
+    unitOfWork.transaction.member = teamMember('editor')
+    const ip = unitOfWork.transaction.hierarchy.ip
+    const proposed = await proposeProjectCanonToIp(dependencies(unitOfWork, ids), {
+      teamId: ip.teamId, actorId: unitOfWork.transaction.member.memberId, targetIpId: ip.id, sourceCanonFactId: fact.id,
+      promotionId: asIpPromotionId('promotion-reject'), conflictResolution: '不纳入母设定', impactNote: '仅当前项目有效', expectedIpRevision: 1,
+      idempotencyKey: asIdempotencyKey('propose-reject'), requestHash: asRequestHash('request-propose-reject'),
+    })
+    unitOfWork.transaction.member = teamMember('admin')
+    const rejected = await decideProjectCanonPromotion(dependencies(unitOfWork, ids), {
+      teamId: ip.teamId, actorId: unitOfWork.transaction.member.memberId, targetIpId: ip.id, promotionId: proposed.promotion.id,
+      decision: 'rejected', expectedIpRevision: 1, idempotencyKey: asIdempotencyKey('decide-reject'), requestHash: asRequestHash('request-decide-reject'),
+    })
+    expect(rejected).toMatchObject({ promotion: { status: 'rejected' }, bibleEntry: null, ipRevision: 2 })
+    expect(unitOfWork.transaction.bibleEntries).toHaveLength(0)
+    expect(unitOfWork.transaction.canonFacts).toEqual([fact])
+  })
 })
 
 describe('Cross-IP Grant application', () => {

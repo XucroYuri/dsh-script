@@ -41,10 +41,23 @@ export interface ApproveEpisodeVersionCommand {
   idempotencyKey: IdempotencyKey
   requestHash: RequestHash
 }
+export interface RejectEpisodeVersionCommand {
+  teamId: TeamId
+  actorId: MemberId
+  projectId: ProjectId
+  episodeId: EpisodeId
+  versionId: VersionId
+  approvalId: ApprovalId
+  decisionNote: string
+  expectedEpisodeRevision: number
+  idempotencyKey: IdempotencyKey
+  requestHash: RequestHash
+}
 
 export interface SubmitEpisodeDraftResult { draft: Draft; version: ManuscriptVersion; episode: Episode }
 export interface ApproveEpisodeVersionResult { episode: Episode; approval: Approval; canonFacts: readonly ProjectCanonFact[] }
-export type AuthoringOperation = 'submit-episode-draft' | 'approve-episode-version'
+export interface RejectEpisodeVersionResult { episode: Episode; approval: Approval }
+export type AuthoringOperation = 'submit-episode-draft' | 'approve-episode-version' | 'reject-episode-version'
 export type GovernanceOperation = 'propose-ip-promotion' | 'decide-ip-promotion' | 'create-cross-ip-grant' | 'revoke-cross-ip-grant'
 export type ApplicationOperation = AuthoringOperation | GovernanceOperation
 export type IdempotencyClaim<Result> = { status: 'claimed' } | { status: 'replay'; result: Result }

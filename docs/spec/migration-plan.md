@@ -52,11 +52,13 @@
 
 ### Stage 1：纯剧本核心与应用契约
 
-状态：进行中。第一切片已完成（2026-09-03）：撤回未提交的 v21 compatibility projection，新建 `@script-studio/domain` 与 `@script-studio/contracts`。Domain 已覆盖 branded IDs、剧集/电影媒介、Team 到 Beat 归属、电影单系统 Season/单主 Episode、剧集非空 Season、位置与 story order、角色权限、跨 Team 拒绝、归档和 revision 写屏障；Contracts 已定义内容隔离 hierarchy DTO、命令、强类型事件和返回 Domain aggregate 的 Repository/Authorizer 端口。两个包生成真实 JS/d.ts，并已从 workspace 消费者完成运行时 import smoke test；源码不依赖宿主、数据库、HTTP、React 或文件系统。Explore 子代理复审发现的 Team scope 可选、DTO/Domain 反向耦合、空季、版本指针、弱类型事件和无 JS 产物六项问题均已关闭。第一切片全 workspace 41 个测试文件 / 315 项测试通过。
+状态：已完成（2026-09-03）。第一切片撤回未提交的 v21 compatibility projection，新建 `@script-studio/domain` 与 `@script-studio/contracts`。Domain 已覆盖 branded IDs、剧集/电影媒介、Team 到 Beat 归属、电影单系统 Season/单主 Episode、剧集非空 Season、位置与 story order、角色权限、跨 Team 拒绝、归档和 revision 写屏障；Contracts 已定义内容隔离 hierarchy DTO、命令、强类型事件和返回 Domain aggregate 的 Repository/Authorizer 端口。两个包生成真实 JS/d.ts，并已从 workspace 消费者完成运行时 import smoke test；源码不依赖宿主、数据库、HTTP、React 或文件系统。Explore 子代理复审发现的 Team scope 可选、DTO/Domain 反向耦合、空季、版本指针、弱类型事件和无 JS 产物六项问题均已关闭。第一切片全 workspace 41 个测试文件 / 315 项测试通过。
 
 第二切片已完成（2026-09-03）：Domain 新增 IP Bible、Project Canon、IP Promotion、Draft、不可变 Manuscript Version、Approval、Cross-IP Grant 和 append-only Audit 模型；`@script-studio/application` 实现 Draft 提交与 Version 审批/Project Canon 原子用例。UnitOfWork 使用 Team/operation/key/requestHash 原子幂等 claim，提交前验证 ready 内容对象的 Team/Project/hash，推进 Episode draft/approved 指针；forbidden/revision conflict 在业务回滚后经独立幂等 SecurityAuditPort 记录。Explore 复审发现的拒绝无审计、幂等串型/并发、对象错绑、draft pointer 和故障回滚五项问题均已关闭。当前全 workspace 43 个测试文件 / 326 项测试、类型检查、真实 JS/d.ts 构建、运行时 exports、历史 pack audit 和纯核心依赖扫描通过。IP Promotion/Grant 的 Application 用例与完整 Repository contract suite 仍待下一切片。
 
 第三切片已完成（2026-09-03）：Application 实现 Project Canon Promotion 提议/决定、批准后 IP Bible Entry、Cross-IP Grant 创建/撤销。Promotion 冻结来源 Canon hash，提议时拒绝 inactive fact，决定时复检来源未漂移；Grant 只允许冻结 Selection Snapshot 的 scope 子集，撤销不修改 Snapshot。目标 IP revision、Team 权限、requestHash 幂等、成功/失败 Audit/Event 均纳入 UnitOfWork 或独立 SecurityAudit。可复用 Governance Repository contract suite 覆盖 Team-scoped 读取、claim/complete/replay、requestHash 冲突、事务回滚与 claim 释放、不可变 Snapshot/scopes、active/revoked Grant 语义。Explore 复审发现的全失败审计、权限原因失真、晚校验 Canon 和 contract 假阳性问题均已关闭。全 workspace 45 个测试文件 / 335 项测试、类型检查、JS/d.ts 构建、历史 pack audit 和纯核心依赖扫描通过。
+
+第四切片及退出审计已完成（2026-09-03）：新增可复用 Authoring Repository contract suite，覆盖 Team-scoped hierarchy/Draft/Version/Content Object、ready/pending 对象、Version 不可覆盖、Episode 指针完整性、Approval/Canon/Audit/Event 原子可见、深回滚和 idempotency claim 释放。补齐 Version reject 领域/命令/应用/事件，要求非空返修说明并明确不写 Canon；补齐 Promotion reject 正向路径。最终 46 个测试文件 / 343 项测试、类型检查、JS/d.ts 构建、运行时 exports、历史 pack audit、纯核心隔离、历史 Bundle 零差异、文档链接和格式检查通过。验证报告：`docs/verification/stage-1-2026-09-03.md`。
 
 范围：
 
@@ -73,7 +75,7 @@
 - 电影一 Season/一主 Episode、剧集多季多集、全层归档和顺序不变量通过；
 - Project Canon 与 IP Canon/Promotion 分离；
 - 权限由应用服务执行并有拒绝测试；
-- 代码、测试、导出类型和文案中不存在目标运行时的 Book/Volume/Chapter 或 `novel` medium；
+- 运行时源码、导出类型和正向产品文案中不存在 Book/Volume/Chapter 或 `novel` medium；明确标注的编译期/拒绝路径负例测试允许引用被禁止值；
 - `pnpm check/test/build` 和 contract tests 通过。
 
 ### Stage 2：双宿主最小垂直闭环
@@ -186,10 +188,10 @@
 
 ## 5. 当前下一步
 
-Stage 0 已完成。在任何新功能开发前：
+Stage 1 已完成。下一步进入 Stage 2 双宿主最小垂直闭环：
 
-1. 建立可复用 Authoring Repository contract suite，覆盖对象元数据、Draft/Version/Episode/Approval/Canon/Audit/Event 和事务回滚；
-2. 审计 Stage 1 的 Domain/Application/API DTO、错误码、事件和端口是否满足全部退出门；
-3. 补齐缺失反例后关闭 Stage 1；
-4. 不在现有 `packages/bundle` 上继续增加 Team、IP、云或 Codex 条件分支；
-5. Stage 1 退出门完成前不创建 Codex/DSH 插件或数据库实现。
+1. 冻结宿主能力 contract version 和最小 read/command DTO；
+2. 创建 `plugins/codex-script-studio` 的 manifest + Skills + MCP 最小插件；
+3. 创建 `plugins/dsh-script-studio` 薄适配器骨架；
+4. 两宿主连接同一个内存开发 API，执行相同 contract tests；
+5. 不实现 PostgreSQL、对象存储、CRDT 或生产认证，这些属于 Stage 3/4。

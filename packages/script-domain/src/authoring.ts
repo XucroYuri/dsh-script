@@ -45,6 +45,7 @@ export interface Approval {
   episodeId: EpisodeId
   versionId: VersionId
   status: ApprovalStatus
+  decisionNote: string
   decidedBy: MemberId | null
   decidedAt: string | null
   idempotencyKey: IdempotencyKey
@@ -192,12 +193,44 @@ export function approveManuscriptVersion(input: {
     episodeId: input.episode.id,
     versionId: input.version.id,
     status: 'approved',
+    decisionNote: '',
     decidedBy: input.actorId,
     decidedAt: requireText(input.decidedAt, 'decidedAt'),
     idempotencyKey: input.idempotencyKey,
   }
   return {
     episode: { ...input.episode, status: 'approved', currentApprovedVersionId: input.version.id, revision: input.episode.revision + 1 },
+    approval,
+  }
+}
+
+export function rejectManuscriptVersion(input: {
+  episode: Episode
+  version: ManuscriptVersion
+  approvalId: ApprovalId
+  actorId: MemberId
+  decisionNote: string
+  decidedAt: string
+  expectedEpisodeRevision: number
+  idempotencyKey: IdempotencyKey
+}): { episode: Episode; approval: Approval } {
+  if (input.episode.revision !== input.expectedEpisodeRevision) throw new DomainError('revision-conflict', 'Episode revision changed before rejection.')
+  if (input.episode.status === 'archived' || input.episode.status === 'locked') throw new DomainError('invalid-state', 'Episode cannot reject a Version in its current state.')
+  if (input.version.episodeId !== input.episode.id || input.version.projectId !== input.episode.projectId) throw new DomainError('validation', 'Version must belong to the rejected Episode.')
+  const approval: Approval = {
+    id: input.approvalId,
+    teamId: input.version.teamId,
+    projectId: input.version.projectId,
+    episodeId: input.episode.id,
+    versionId: input.version.id,
+    status: 'rejected',
+    decisionNote: requireText(input.decisionNote, 'decisionNote'),
+    decidedBy: input.actorId,
+    decidedAt: requireText(input.decidedAt, 'decidedAt'),
+    idempotencyKey: input.idempotencyKey,
+  }
+  return {
+    episode: { ...input.episode, status: 'draft', currentDraftVersionId: input.version.id, revision: input.episode.revision + 1 },
     approval,
   }
 }

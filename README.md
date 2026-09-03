@@ -67,7 +67,7 @@ DeepSeek Harness 侧使用官方 Bundle、Host service、Tools 和 Client Slot�
 
 ## 当前状态
 
-当前阶段：**Stage 1 进行中，纯 Domain/Contracts 首切片已完成**。
+当前阶段：**Stage 1 已完成，Stage 2 双宿主最小闭环即将开始**。
 
 已经完成：
 
@@ -77,11 +77,12 @@ DeepSeek Harness 侧使用官方 Bundle、Host service、Tools 和 Client Slot�
 - 云数据库、对象存储、实时协作和权限架构；
 - 新的重构阶段与质量门。
 
-当前 Stage 1 下一切片：**Authoring Repository contract suite 与阶段退出审计**。
+下一阶段：**Codex/DSH 双宿主最小垂直闭环**。
 
-- 为 Draft/Version/Episode/Approval/Project Canon/Audit/Event 建立可复用 Repository contract tests；
-- 审计 Domain/Application/API DTO、错误码和事件覆盖；
-- 补齐 Stage 1 退出门后再开始 Codex/DSH 双宿主切片；
+- 冻结共享宿主能力与 API contract version；
+- 建立 Codex manifest + Skills + MCP 最小插件；
+- 建立 DSH 薄适配器骨架；
+- 两宿主运行相同 contract tests，不接入云基础设施。
 - Stage 1 结束前不创建 Codex、DSH 或云基础设施实现。
 
 ## 开发规范

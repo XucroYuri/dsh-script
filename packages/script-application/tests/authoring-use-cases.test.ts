@@ -3,7 +3,7 @@ import {
   asApprovalId, asContentObjectId, asDraftId, asIdempotencyKey, asProjectCanonFactId, asRequestHash, asVersionId,
   type Draft,
 } from '@script-studio/domain'
-import { approveEpisodeVersion, submitEpisodeDraft } from '../src/index.js'
+import { approveEpisodeVersion, rejectEpisodeVersion, submitEpisodeDraft } from '../src/index.js'
 import { DeterministicIds, MemorySecurityAudit, MemoryUnitOfWork, teamMember } from './support.js'
 
 const HASH = 'a'.repeat(64)
@@ -124,5 +124,26 @@ describe('ApproveEpisodeVersion', () => {
     expect(unitOfWork.transaction.events).toHaveLength(3)
     unitOfWork.transaction.failOn = null
     await expect(approveEpisodeVersion(dependencies(unitOfWork, ids), command)).resolves.toMatchObject({ approval: { status: 'approved' } })
+  })
+})
+
+describe('RejectEpisodeVersion', () => {
+  it('records a rejected Approval, preserves the immutable draft pointer, and never creates Canon', async () => {
+    const unitOfWork = new MemoryUnitOfWork(), ids = new DeterministicIds()
+    const submitted = await submitEpisodeDraft(dependencies(unitOfWork, ids), submitCommand(unitOfWork))
+    unitOfWork.transaction.member = teamMember('reviewer')
+    const hierarchy = unitOfWork.transaction.hierarchy
+    const command = {
+      teamId: hierarchy.team.id, actorId: unitOfWork.transaction.member.memberId, projectId: hierarchy.project.id,
+      episodeId: hierarchy.episodes[0]!.id, versionId: submitted.version.id, approvalId: asApprovalId('approval-reject'),
+      decisionNote: '需要重写结尾冲突。', expectedEpisodeRevision: 2,
+      idempotencyKey: asIdempotencyKey('reject-1'), requestHash: asRequestHash('request-reject-1'),
+    }
+    const rejected = await rejectEpisodeVersion(dependencies(unitOfWork, ids), command)
+    expect(await rejectEpisodeVersion(dependencies(unitOfWork, ids), command)).toEqual(rejected)
+    expect(rejected).toMatchObject({ episode: { status: 'draft', revision: 3, currentDraftVersionId: submitted.version.id, currentApprovedVersionId: null }, approval: { status: 'rejected', decisionNote: '需要重写结尾冲突。' } })
+    expect(unitOfWork.transaction.approvals).toHaveLength(1)
+    expect(unitOfWork.transaction.canonFacts).toHaveLength(0)
+    expect(unitOfWork.transaction.events.filter(event => event.type === 'manuscript-version.rejected')).toHaveLength(1)
   })
 })

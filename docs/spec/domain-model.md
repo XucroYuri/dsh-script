@@ -158,6 +158,7 @@ Scene 内发生的动作、信息或情绪变化。Beat 是规划对象，不强
 - Approval 属于 Episode 和一个不可变 Manuscript Version，状态为 `pending | approved | rejected | superseded`；
 - 审批命令必须包含 Team、actor、expected Episode revision 和 idempotency key；
 - 同一 Episode/revision 的审批只有一个事务可成功；
+- 拒绝 Version 必须记录非空返修理由，保留不可变 Version 和 currentDraftVersionId，不创建 Canon，并将 Episode 返回可编辑状态、revision 加一；
 - 只有 `approved` Version 可以派生 Project Canon Fact；
 - Canon Fact 必须保存 source Episode、source Version、content hash 和 evidence；
 - 审批、Episode approved pointer、Project Canon、Audit 和待发布事件在同一 Unit of Work 中提交；

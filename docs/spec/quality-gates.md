@@ -18,7 +18,7 @@
 
 - Team/IP/Project/Season/Episode 直接归属完整；
 - stable ID、位置、story order 和 revision 不变量有测试；
-- 剧集、电影媒介规则分别有正反例，目标 medium 不接受 `novel`；
+- 剧集、电影媒介规则分别有正反例，目标运行时与导出不接受 `novel`；显式负例测试可以引用被禁止值；
 - 电影恰好一个系统 Season 和一个主 Episode；
 - 归档在每层形成可逆写屏障；
 - Project Canon 与 IP Canon 分离；
