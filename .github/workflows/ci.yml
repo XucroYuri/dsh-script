@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality and directory composition
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test
+        env:
+          NOVEL_STUDIO_TEST_TMP: ${{ runner.temp }}/novel-studio-tests
+      - run: pnpm build
+      - run: pnpm pack:audit
+      - run: npm install --global @deepseek-ai/dsh@0.1.0-rc.7
+      - run: pnpm test:composition
+        env:
+          NOVEL_STUDIO_TEST_TMP: ${{ runner.temp }}/novel-studio-tests
+      - run: git diff --check
+
+  package-install:
+    name: Exact tarball install (${{ matrix.os }})
+    needs: quality
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm pack:audit
+      - run: npm install --global @deepseek-ai/dsh@0.1.0-rc.7
+      - run: pnpm test:package-install
+        env:
+          NOVEL_STUDIO_TEST_TMP: ${{ runner.temp }}/novel-studio-tests

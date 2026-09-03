@@ -1,0 +1,37 @@
+.DS_Store
+
+# Dependencies and generated build output
+node_modules/
+packages/*/node_modules/
+packages/*/lib/
+coverage/
+.vitest/
+
+# Local release artifacts
+dist/
+*.tgz
+
+# Environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Novel Studio runtime and user data
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+*.bak
+*.backup
+data/
+backups/
+artifacts/
+exports/
+logs/
+
+# Local browser QA and rendered screenshots
+.playwright-cli/
+output/
