@@ -36,6 +36,8 @@ Codex Plugin / DSH Plugin / Web Client
 
 对象内容生命周期切片补充以下不可变边界：对象引用由 Team、stable object ID、SHA-256、byte size、media type 和不可猜测 key 组成，key 不使用用户标题；上传先登记 `pending`，对象存储写入使用 `ImmutableObjectStorePort.putIfAbsent`，只有实际 hash/size 与登记值一致才转为 `ready`，失败进入 `failed`；ready 对象不能覆盖或回写。Application 只能把 `ready` Content Object 交给 Version/Approval，pending/failed 对象必须被拒绝。当前实现提供 hash/lifecycle contract 和端口，尚未伪装成已接通 S3 或其他对象存储。
 
+认证 API 切片补充以下边界：请求先由 `AccessTokenVerifierPort` 验证 Bearer token，再以 verifier 返回的 `VerifiedCloudSession.teamId/memberId` 调用 repository；Client 提供的 Team header 或 body 字段不能覆盖该 scope。当前 API 仅提供只读 hierarchy 路由，测试 verifier/repository 只用于 contract 验证，不代表 OIDC issuer、JWKS、PostgreSQL 或生产部署已接通。
+
 ### PostgreSQL
 
 事务权威数据：
