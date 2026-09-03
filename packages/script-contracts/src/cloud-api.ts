@@ -11,7 +11,7 @@ export interface AccessTokenVerifierPort {
 }
 
 export interface CloudHierarchyRepositoryPort {
-  getProjectHierarchy(teamId: TeamId, projectId: ProjectId): Promise<ProjectHierarchy | null>
+  getProjectHierarchy(session: VerifiedCloudSession, projectId: ProjectId): Promise<ProjectHierarchy | null>
 }
 
 export interface ScriptStudioApiRequest {

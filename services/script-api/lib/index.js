@@ -59,7 +59,7 @@ export class ScriptStudioApi {
             return failure(request.requestId, 400, cause);
         }
         try {
-            const value = await this.hierarchy.getProjectHierarchy(session.teamId, projectId);
+            const value = await this.hierarchy.getProjectHierarchy(session, projectId);
             if (!value)
                 return failure(request.requestId, 404, new DomainError('not-found', 'Project hierarchy was not found.'));
             return { status: 200, body: { ok: true, contractVersion: SCRIPT_STUDIO_API_VERSION, result: value } };

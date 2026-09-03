@@ -1,4 +1,4 @@
-import type { CloudHierarchyRepositoryPort } from '@script-studio/contracts'
+import type { CloudHierarchyRepositoryPort, VerifiedCloudSession } from '@script-studio/contracts'
 import {
   asBeatId, asEpisodeId, asIpId, asProjectId, asSceneId, asSeasonId, asSequenceId, asTeamId, asVersionId,
   type Beat, type Episode, type Ip, type Project, type ProjectHierarchy, type Scene, type Season, type Sequence, type Team,
@@ -44,6 +44,10 @@ export interface PostgresTransactionPort extends PostgresQueryPort {
   begin(): Promise<void>
   commit(): Promise<void>
   rollback(): Promise<void>
+}
+
+export interface PostgresTransactionProviderPort {
+  open(): Promise<PostgresTransactionPort>
 }
 
 export async function withTenantTransaction<Result>(
@@ -113,7 +117,11 @@ const BEATS_QUERY = 'SELECT id, project_id, episode_id, scene_id, text, position
 export class PostgresHierarchyRepository implements CloudHierarchyRepositoryPort {
   constructor(private readonly database: PostgresQueryPort) {}
 
-  async getProjectHierarchy(teamId: TeamId, projectId: ProjectId): Promise<ProjectHierarchy | null> {
+  async getProjectHierarchy(session: VerifiedCloudSession, projectId: ProjectId): Promise<ProjectHierarchy | null> {
+    return this.getProjectHierarchyForTeam(session.teamId, projectId)
+  }
+
+  async getProjectHierarchyForTeam(teamId: TeamId, projectId: ProjectId): Promise<ProjectHierarchy | null> {
     const values = [teamId, projectId]
     const root = (await this.database.query<RootRow>(ROOT_QUERY, values)).rows[0]
     if (!root) return null
@@ -134,5 +142,14 @@ export class PostgresHierarchyRepository implements CloudHierarchyRepositoryPort
       scenes: scenes.rows.map(row => ({ id: asSceneId(row.id), projectId: asProjectId(row.project_id), episodeId: asEpisodeId(row.episode_id), sequenceId: row.sequence_id ? asSequenceId(row.sequence_id) : null, heading: row.heading, position: numberValue(row.position, 'scene.position'), status: row.status, revision: numberValue(row.revision, 'scene.revision') })),
       beats: beats.rows.map(row => ({ id: asBeatId(row.id), projectId: asProjectId(row.project_id), episodeId: asEpisodeId(row.episode_id), sceneId: asSceneId(row.scene_id), text: row.text, position: numberValue(row.position, 'beat.position'), status: row.status, revision: numberValue(row.revision, 'beat.revision') })),
     }
+  }
+}
+
+export class PostgresTransactionalHierarchyRepository implements CloudHierarchyRepositoryPort {
+  constructor(private readonly transactions: PostgresTransactionProviderPort) {}
+
+  async getProjectHierarchy(session: VerifiedCloudSession, projectId: ProjectId): Promise<ProjectHierarchy | null> {
+    const transaction = await this.transactions.open()
+    return withTenantTransaction(transaction, session, active => new PostgresHierarchyRepository(active).getProjectHierarchyForTeam(session.teamId, projectId))
   }
 }

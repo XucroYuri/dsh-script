@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
   PostgresHierarchyRepository,
+  PostgresTransactionalHierarchyRepository,
   type PostgresQueryPort,
   type PostgresTransactionPort,
   withTenantTransaction,
 } from '../src/index.js'
 import {
+  asMemberId,
   asProjectId,
   asTeamId,
-  type ProjectId,
-  type TeamId,
 } from '@script-studio/domain'
 
 interface QueryCall {
@@ -22,6 +22,7 @@ class HierarchyQueryStub implements PostgresQueryPort {
 
   async query<Row extends Record<string, unknown>>(text: string, values: readonly unknown[]): Promise<{ rows: readonly Row[] }> {
     this.calls.push({ text, values: [...values] })
+    if (text.includes('set_config')) return { rows: [] as readonly Row[] }
     if (text.includes('FROM app.projects p')) {
       return {
         rows: [{
@@ -69,13 +70,28 @@ class TransactionStub implements PostgresTransactionPort {
   async rollback(): Promise<void> { this.events.push('rollback') }
 }
 
+class HierarchyTransactionStub extends HierarchyQueryStub implements PostgresTransactionPort {
+  readonly events: string[] = []
+
+  async begin(): Promise<void> { this.events.push('begin') }
+
+  async query<Row extends Record<string, unknown>>(text: string, values: readonly unknown[]): Promise<{ rows: readonly Row[] }> {
+    this.events.push('query')
+    return super.query<Row>(text, values)
+  }
+
+  async commit(): Promise<void> { this.events.push('commit') }
+
+  async rollback(): Promise<void> { this.events.push('rollback') }
+}
+
 const teamId = asTeamId('team-1')
 const projectId = asProjectId('project-1')
 
 describe('PostgreSQL hierarchy repository', () => {
   it('keeps every hierarchy query parameterized by the verified Team and Project', async () => {
     const database = new HierarchyQueryStub()
-    const hierarchy = await new PostgresHierarchyRepository(database).getProjectHierarchy(teamId, projectId)
+    const hierarchy = await new PostgresHierarchyRepository(database).getProjectHierarchy({ subject: 'oidc|writer', teamId, memberId: asMemberId('member-1') }, projectId)
 
     expect(database.calls).toHaveLength(6)
     expect(database.calls.every(call => call.values === undefined || JSON.stringify(call.values) === JSON.stringify(['team-1', 'project-1']))).toBe(true)
@@ -89,6 +105,25 @@ describe('PostgreSQL hierarchy repository', () => {
       scenes: [{ id: 'scene-1', sequenceId: 'sequence-1' }],
       beats: [{ id: 'beat-1', sceneId: 'scene-1' }],
     })
+  })
+
+  it('passes the complete verified session through the transaction wrapper', async () => {
+    const transaction = new HierarchyTransactionStub()
+    const repository = new (class {
+      async open(): Promise<PostgresTransactionPort> { return transaction }
+    })()
+    const hierarchy = await new PostgresTransactionalHierarchyRepository(repository).getProjectHierarchy(
+      { subject: 'oidc|writer', teamId, memberId: asMemberId('member-1') },
+      projectId,
+    )
+
+    expect(hierarchy?.project.id).toBe(projectId)
+    expect(transaction.events).toEqual(['begin', 'query', 'query', 'query', 'query', 'query', 'query', 'query', 'query', 'commit'])
+    expect(transaction.calls.slice(0, 2)).toEqual([
+      { text: "select set_config('app.team_id', $1, true)", values: ['team-1'] },
+      { text: "select set_config('app.member_id', $1, true)", values: ['member-1'] },
+    ])
+    expect(transaction.calls.slice(2).every(call => JSON.stringify(call.values) === JSON.stringify(['team-1', 'project-1']))).toBe(true)
   })
 })
 

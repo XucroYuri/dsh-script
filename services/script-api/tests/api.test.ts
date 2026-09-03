@@ -20,10 +20,10 @@ class TestSessions implements AccessTokenVerifierPort {
 }
 
 class TestHierarchy implements CloudHierarchyRepositoryPort {
-  seen: Array<{ teamId: string; projectId: string }> = []
-  async getProjectHierarchy(requestTeamId: typeof teamId, requestProjectId: typeof projectId): Promise<ProjectHierarchy | null> {
-    this.seen.push({ teamId: requestTeamId, projectId: requestProjectId })
-    return requestTeamId === teamId && requestProjectId === projectId ? hierarchy : null
+  seen: Array<{ teamId: string; memberId: string; projectId: string }> = []
+  async getProjectHierarchy(requestSession: VerifiedCloudSession, requestProjectId: typeof projectId): Promise<ProjectHierarchy | null> {
+    this.seen.push({ teamId: requestSession.teamId, memberId: requestSession.memberId, projectId: requestProjectId })
+    return requestSession.teamId === teamId && requestSession.memberId === session.memberId && requestProjectId === projectId ? hierarchy : null
   }
 }
 
@@ -48,7 +48,7 @@ describe('authenticated Script Studio API boundary', () => {
     const api = new ScriptStudioApi(sessions, repository)
     const response = await api.handle(request({ authorization: 'Bearer valid-token', 'x-team-id': otherTeamId }))
     expect(response).toMatchObject({ status: 200, body: { ok: true, result: { project: { id: projectId, teamId } } } })
-    expect(repository.seen).toEqual([{ teamId, projectId }])
+    expect(repository.seen).toEqual([{ teamId, memberId: session.memberId, projectId }])
     expect(JSON.stringify(response)).not.toContain('valid-token')
   })
 
