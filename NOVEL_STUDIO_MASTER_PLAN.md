@@ -3850,7 +3850,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3D PostgreSQL hierarchy query/transaction port | 进行中（读事务切片已完成） | 新增 `PostgresHierarchyRepository`、`PostgresTransactionalHierarchyRepository` 与 `withTenantTransaction`：完整 verified session 贯穿 API/事务/repository，参数化 Team/Project 查询、层级行映射、PostgreSQL numeric 归一化、transaction-local Team/member settings 和 rollback 边界已冻结。8 项 infra-postgres 测试、全仓库 check/test/build、发行包 pack audit 与格式检查通过；具体 driver、真实 RLS、OIDC/HTTP 和部署留待后续门禁。 |
 | Script Studio v2 Stage 3E OIDC RS256 verifier | 进行中（固定配置 verifier 切片已完成） | 新增独立 `@script-studio/infra-oidc`：固定 issuer/audience/JWKS、RS256/RSA `kid` 校验、签名与时间 claims 验证、Team/member 映射、JWKS cache/key rotation refresh 和 token/header 安全拒绝已冻结。5 项 RSA verifier 测试、全 workspace 60 个测试文件 / 378 项测试、类型检查、构建、发行包审计和格式检查通过；真实 issuer discovery、nonce、token rotation/撤销、HTTP composition 和 IdP 留待后续门禁。 |
 | Script Studio v2 Stage 3F API HTTP composition | 进行中（无框架 adapter 切片已完成） | 新增 `createScriptStudioHttpHandler`：Node request 到稳定 API request 的 pathname/header/requestId 转换、JSON/no-store 响应和安全异常屏障已冻结。7 项 service-api 测试、全 workspace 61 个测试文件 / 381 项测试、类型检查、构建、发行包审计和格式检查通过；TLS/代理/限流、真实数据库/IdP、部署与 observability 留待后续门禁。 |
-| Script Studio v2 Stage 3G PostgreSQL driver 生命周期 | 进行中（设计已冻结） | 计划让 node-postgres 使用同一 checked-out client 执行 transaction port，并在 commit/rollback 后统一 release；验证 pool.query 不被用于事务、连接池配置不受请求覆盖。真实 PostgreSQL/RLS 与外部连接配置留待后续门禁。 |
+| Script Studio v2 Stage 3G PostgreSQL driver 生命周期 | 进行中（driver 生命周期切片已完成） | `pg@8.23.0` 的 `PgTransactionProvider` 使用同一 checked-out client 执行 transaction port，并在 commit/rollback 后统一 release；9 项 infra-postgres 测试、全 workspace 61 个测试文件 / 382 项测试、类型检查、构建、发行包审计和格式检查通过。真实 PostgreSQL/RLS、TLS、migration、外部连接配置与生产 composition 留待后续门禁。 |
 
 ---
 
