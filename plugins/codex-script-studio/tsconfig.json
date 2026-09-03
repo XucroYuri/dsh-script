@@ -7,7 +7,8 @@
       "@script-studio/contracts/testing/host-adapter-parity-contract": ["../../packages/script-contracts/testing/host-adapter-parity-contract.ts"],
       "@script-studio/domain": ["../../packages/script-domain/src/index.ts"],
       "@script-studio/application": ["../../packages/script-application/src/index.ts"],
-      "@script-studio/dsh-adapter": ["../dsh-script-studio/src/index.ts"]
+      "@script-studio/dsh-adapter": ["../dsh-script-studio/src/adapter.ts"],
+      "@script-studio/dsh-adapter/adapter": ["../dsh-script-studio/src/adapter.ts"]
     }
   },
   "include": ["src", "tests"]

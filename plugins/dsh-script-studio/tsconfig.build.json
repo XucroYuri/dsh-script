@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@script-studio/application": ["../../packages/script-application/lib/index.d.ts"],
+      "@script-studio/contracts/dto": ["../../packages/script-contracts/lib/dto.d.ts"],
+      "@script-studio/contracts/host": ["../../packages/script-contracts/lib/host-contract.d.ts"],
+      "@script-studio/domain": ["../../packages/script-domain/lib/index.d.ts"]
+    },
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "lib"
+  },
+  "include": ["src"],
+  "exclude": ["tests"]
+}

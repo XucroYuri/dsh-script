@@ -11,7 +11,7 @@ import {
   asTeamId,
   type ProjectHierarchy,
 } from '@script-studio/domain'
-import { DshScriptStudioAdapter } from '@script-studio/dsh-adapter'
+import { DshScriptStudioAdapter } from '@script-studio/dsh-adapter/adapter'
 import { CodexScriptStudioAdapter } from '../src/index.js'
 
 function hierarchy(): ProjectHierarchy {
