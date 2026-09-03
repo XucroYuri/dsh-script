@@ -29,7 +29,9 @@
     "prepack": "node scripts/build.mjs",
     "check": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:composition": "node tests/composition-smoke.mjs"
+    "test:composition": "node tests/composition-smoke.mjs",
+    "pack:audit": "node scripts/pack-audit.mjs",
+    "test:package-install": "node tests/package-install-smoke.mjs"
   },
   "engines": { "node": ">=24" },
   "dependencies": {

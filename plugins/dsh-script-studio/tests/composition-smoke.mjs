@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const plugin = resolve(here, '..')
+const plugin = process.env.SCRIPT_STUDIO_INSTALL_SPEC ? resolve(process.env.SCRIPT_STUDIO_INSTALL_SPEC) : resolve(here, '..')
 const workspace = resolve(plugin, '../..')
 
 function resolveDshBin() {

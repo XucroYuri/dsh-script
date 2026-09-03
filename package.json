@@ -14,6 +14,10 @@
     "build:stage1": "pnpm --filter @script-studio/domain --filter @script-studio/contracts --filter @script-studio/application build",
     "test:composition": "pnpm --filter @novel-studio/dsh-novel-studio test:composition",
     "test:package-install": "pnpm --filter @novel-studio/dsh-novel-studio test:package-install",
+    "test:stage2:codex": "pnpm --filter @script-studio/codex-adapter test:composition",
+    "test:stage2:dsh": "pnpm --filter @script-studio/dsh-adapter test:composition",
+    "pack:audit:stage2:dsh": "pnpm --filter @script-studio/dsh-adapter pack:audit",
+    "test:stage2:package-install": "pnpm --filter @script-studio/dsh-adapter test:package-install",
     "release:pack": "pnpm --filter @novel-studio/dsh-novel-studio release:pack"
   },
   "devDependencies": {

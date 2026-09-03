@@ -1,0 +1,25 @@
+{
+  "name": "script-studio",
+  "interface": {
+    "displayName": "Script Studio"
+  },
+  "plugins": [
+    {
+      "name": "script-studio-codex",
+      "description": "Codex plugin for the Script Studio Host Contract and screenplay hierarchy tools.",
+      "version": "0.1.0",
+      "author": {
+        "name": "XucroYuri",
+        "url": "https://github.com/XucroYuri"
+      },
+      "source": "./plugins/codex-script-studio",
+      "category": "Productivity",
+      "homepage": "https://github.com/XucroYuri/dsh-script",
+      "tags": ["script-studio", "screenwriting", "codex"],
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      }
+    }
+  ]
+}
