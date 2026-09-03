@@ -1,22 +1,24 @@
-# DeepSeek Harness Script Studio：项目总规范与实施计划
+# DeepSeek Harness Script Studio：历史实施总计划与兼容记录
 
 > 文档状态：Draft v1.0（首个可执行基线）  
 > 最后更新：2026-09-02
 > 目标读者：负责从零实施本项目的主对话、Codex、开发者和测试者  
-> 文档角色：本项目的单一事实来源（Single Source of Truth）
+> 文档角色：Novel Studio 历史实施记录、兼容背景与 ADR 账本
+
+> Script Studio 的现行产品与架构规范位于 `docs/spec/`。规范优先级依次为产品规范、领域模型、架构规范和迁移计划；本文件不再单独承担新产品语义的唯一事实来源。历史阶段、已验证能力和兼容约束继续以本文件为准，除非新的 SPEC 或 ADR 明确取代。
 
 ---
 
 ## 0. 如何使用这份文档
 
-本文件不是产品介绍，而是从项目初始化到发布的执行规范。主对话应围绕本文件持续实施，不应在每次上下文压缩后重新发明架构。
+本文件不是当前产品介绍，而是从 Novel Studio 初始化到发布的实施历史、兼容规范和决策账本。Script Studio 的新开发先从 `docs/spec/README.md` 进入，再按需查阅本文件中的既有实现事实，不能因重构而重新发明或破坏已验证的数据边界。
 
 ### 0.1 执行契约
 
 任何继续开发本项目的 Agent，在修改代码前必须：
 
-1. 完整阅读本文件。
-2. 阅读仓库内的 `AGENTS.md`、`README.md`、当前实施状态和迁移记录。
+1. 阅读 `AGENTS.md` 与 `docs/spec/` 中的现行规范。
+2. 阅读本文件中与当前切片相关的实施状态、兼容记录和 ADR，不要求为每个局部改动重复通读全部历史。
 3. 检查当前安装的 DeepSeek Harness 版本及其官方扩展接口。
 4. 检查工作区已有修改，保留用户和其他任务的改动。
 5. 只实现当前阶段内最小、完整、可验证的垂直切片。
@@ -2978,6 +2980,8 @@ Harness ctx.llm.stream() 发出 text-delta
 
 ### Phase 5.36：Script Studio 仓库与领域基线迁移
 
+状态：Superseded。以下为 2026-09-03 早期兼容投影方案，仅保留历史；现行路线以 `docs/spec/migration-plan.md` v2 为准，不继续实施本节的旧表双写或小说媒介兼容。
+
 目标：以现有成熟创作链为基础，将产品演进为专业剧本工作室；先重建独立源码仓库并冻结五层领域契约，再通过非破坏性迁移逐步承载 Team / IP / Project / Season / Episode，不把界面改名伪装成领域重构。
 
 实施顺序：
@@ -2998,7 +3002,7 @@ Harness ctx.llm.stream() 发出 text-delta
 - schema v21 迁移前后对项目、章节/集、正文版本、批准指针、Canon、Memory、关系和 ModelRun 做数量与引用完整性对账；失败必须回滚，且不删除 schema v20 数据；
 - README 不把尚未实现的 Team/IP 协作、权限或专业剧本格式宣传为现有能力。
 
-实施状态（2026-09-03）：进行中。仓库与文档/metadata 基线已完成：本机账号下的公开 `dsh-script` 使用当前工作树建立独立根历史，旧 remote、Tag、Release 和仓库 URL 均未继承；全量 301 项测试、类型检查、构建与 pack audit 通过。五层领域契约、schema v21 和运行时代码仍待后续垂直切片实施，本里程碑未修改 schema v20。
+实施状态（2026-09-03）：已停止。schema v21 compatibility projection 曾完成实现与 311 项测试/composition 验证，但新需求明确要求 Codex/DSH 双宿主、云端团队协作和纯剧本运行时，不保留小说兼容噪音；该实现因此标记为 Rejected Spike，未提交，后续先撤回，再按 `docs/spec/migration-plan.md` Stage 1 抽取纯 Domain/Application/Contracts/Ports。
 
 ### Phase 6：发布与自动安装
 
@@ -3041,10 +3045,10 @@ Harness ctx.llm.stream() 发出 text-delta
 
 ### 19.1 给主对话的启动提示
 
-可直接把下面这段连同本文档交给主对话：
+以下是已完成 Phase 0 时使用的历史启动提示，不再用于 Script Studio 重构。当前开发从 `docs/spec/README.md` 和 `docs/spec/migration-plan.md` 进入。
 
 ```text
-请以 NOVEL_STUDIO_MASTER_PLAN.md 为本项目的单一事实来源，从 Phase 0 开始实施。
+【历史提示，已停用】请以 NOVEL_STUDIO_MASTER_PLAN.md 为本项目的单一事实来源，从 Phase 0 开始实施。
 
 要求：
 1. 先完整阅读计划和工作区指令。
@@ -3710,9 +3714,33 @@ Harness ctx.llm.stream() 发出 text-delta
 
 ### ADR-106：五层剧本领域采用新增聚合与非破坏性兼容迁移
 
-状态：Accepted
+状态：Superseded by ADR-110
 
 原因：现有 schema v20 的 Project / Book / Volume / Chapter 已承载正文版本、批准指针、Canon、Memory、关系、工作流、统计与导入导出，直接重命名会同时破坏数据与审计链。新模型以 Team / IP / Project / Season / Episode 为正式归属结构；旧 Project 确定性归入新 Project，Book/Volume 折叠到 Season，Chapter 映射到 Episode。迁移先新增实体与外键、回填并双读验证，再切换写路径；兼容期不删除旧表和字段。Project 继续允许表达独立长篇小说，确保现有用户数据不是被剧本方向淘汰，而是进入统一内容生产模型。
+
+### ADR-107：Script Studio 使用单责 SPEC 集合，主计划转为历史与兼容账本
+
+状态：Accepted
+
+原因：原主计划同时承担产品定义、领域模型、架构、数据库建议、Prompt 设计、阶段记录和 ADR，已经超过 3700 行；继续直接改写会让历史实现事实与新产品规范互相覆盖。Script Studio 因此以 `docs/spec/` 下的产品、领域、架构、双宿主、云协作、迁移和质量门规范分别承载单一职责，并由规范索引定义优先级。主计划继续保存 Novel Studio 已验证能力、历史阶段和 ADR，不删除历史。任何行为或架构变化先更新对应 SPEC，再进入实现；README 只描述当前真实能力。
+
+### ADR-108：Codex 与 DeepSeek Harness 是平等薄宿主
+
+状态：Accepted
+
+原因：产品必须同时以 Codex plugin 和 DeepSeek Harness plugin 交付，但领域规则、权限、工作流和数据契约不能复制两份。Codex `0.150.1` 已核验 marketplace、`.codex-plugin/plugin.json`、Skills、MCP 和可选 App 形态；DSH 继续使用官方 Bundle、Host service 和 Client Slot。两个适配器只实现统一 Host Capability Ports 并调用同一个 Script Studio API，不能直连云数据库、持有对象存储主凭据或按宿主分叉业务语义。
+
+### ADR-109：团队模式以 PostgreSQL和对象存储为云端权威
+
+状态：Accepted
+
+原因：多人协作不能建立在单机 SQLite 最终事实源上。PostgreSQL 保存 Team、权限、结构、审批、Canon、工作流、审计和 outbox，并以 `team_id`、复合归属约束和 RLS 隔离租户；S3 兼容对象存储保存来源、剧本快照、批准版本和导出；成熟 CRDT 只处理 Draft 实时协作。SQLite 降为本地开发、离线缓存和待同步 outbox。审批版本不可变，Approval/Canon 保持强一致事务，跨系统工作通过 transactional outbox 幂等推进。
+
+### ADR-110：目标运行时纯剧本化，小说仅通过独立 importer 迁移
+
+状态：Accepted
+
+原因：继续保留 `novel` medium、Book/Volume/Chapter、旧 API、旧包名和 legacy projection 会让领域、插件、云 schema 和 UI 长期承担两套产品语义。目标运行时因此只支持 `episodic | feature-film`，并从 Team/IP/Project/Season/Episode/Sequence/Scene/Beat 建立权威模型。旧 Novel Studio 数据由独立工具只读导入：正文成为 Source Asset，结构和事实成为待审核改编候选，源数据库保持原样。早期 schema v21 compatibility projection 与旧表双写路线被撤回，不进入正式基线。
 
 ---
 
@@ -3760,12 +3788,18 @@ Harness ctx.llm.stream() 发出 text-delta
 | Phase 5.33 单一审批决策面与常驻文字反馈 | 已完成（本地开发） | 待审批版本审阅隐藏重复工作流栏，并在唯一审阅头部常驻批准备注或返修意见、建立返修版本与确认批准；返回正文后只保留“返回审阅”。文字按目标隔离，直接/工作流错误分别显示，返修与批准继续执行目标版本锁定。`pnpm check`、构建、3 个相关测试文件 / 23 项及全量 37 个测试文件 / 297 项测试通过；真实 Profile 已加载当前构建，710px 审阅容器无横向溢出。版本与 schema 保持 `.6` / v20。 |
 | Phase 5.34 正文内选段改写与原子审批目标同步 | 已完成（本地开发） | 普通只读全文审阅入口已移除，版本面板只在存在两个版本时提供真实差异比较；正文工具栏常驻“选段改写”入口与空选区提示，选中后可直接使用既有快捷动作或填写自定义要求。等待批准不再强制跳入只读审阅，作者可在正文内局部改写；新稿保存会在同一 SQLite 事务内同步 pending approval、等待节点输出和审计事件，旧版本保留，未保存或目标漂移时不能批准。`pnpm check`、`pnpm build`、4 个相关测试文件 / 75 项及全量 37 个测试文件 / 300 项测试通过；真实 Profile 已用官方插件命令重载，已验证普通已批准正文和等待批准正文均能触发选区工具、自定义要求弹层可打开，版本面板不再出现“无基线，仅阅读全文 / 在主区审阅”，窄宽页面布局可用。未调用模型、未改写用户正文；版本与 schema 保持 `.6` / v20。 |
 | Phase 5.35 真实调用、Token 与 AI 正文统计 | 已完成（本地开发） | 章节结构生长图已从 Client 撤下并替换为创作统计；新增内容隔离 DTO/API，按真实 ModelRun 汇总调用与 Provider usage 覆盖，Token 总量包含互斥的输入/输出/cache-read/cache-write 且不重复累计 reasoning，每个成功正文运行只累计首次落库成稿一次，并提供调用构成和逐章明细。接口不再返回本机 workspace path；901—1100px 中等视口提前切换紧凑章节布局。旧 `/growth` 兼容保留，schema/Bundle 维持 v20/`.6`。`pnpm check`、build、pack audit、37 个测试文件 / 301 项测试、真实 composition、doctor 和当前 710×693 Profile 页面验收通过；真实项目显示 12 次调用、128,460 已记录 Token（当前缓存桶为 0）、5 次正文完成 / 20,462 字且无横向溢出。最终精确统计修订另有 2 个聚焦文件 / 23 项测试通过。未调用模型或修改正文，未制作新 tarball、提交或发布。 |
-| Phase 5.36 Script Studio 仓库与领域基线迁移 | 进行中（仓库基线已完成） | 新目标确定为 Team / IP / Project / Season / Episode 五层专业剧本工作室；Project 继续兼容独立长篇小说，Season/Episode 非破坏性映射旧 Book/Volume/Chapter。独立 `dsh-script` GitHub 根历史、仓库 URL、README 与 metadata 已完成并通过 301 项测试、类型检查、构建和 pack audit；schema v20 与运行时代码未改，五层领域实现仍待后续垂直切片。 |
+| Phase 5.36 早期兼容投影方案 | 已撤回（Rejected Spike） | schema v21 旧表投影曾通过 311 项测试和 DSH composition，但与双宿主、云协作、纯剧本运行时的新目标冲突，未提交且不继续演化。现行工作从 `docs/spec/migration-plan.md` v2 Stage 0/1 开始，先撤回 spike 并抽取宿主无关核心。 |
 | Phase 6 发布与自动安装 | 已完成（历史预发布） | 2026-09-02 曾在旧公开仓库从 commit `e36aca56de33a473e3367f5521e6b99d999c4870` 发布 `v0.8.0-author-control.6`。README 已覆盖产品定位、pnpm/Harness 前置条件、校验安装、DeepSeek 配置、首次创作、doctor、升级、卸载、备份和排障，且不含真实作品、游戏素材、凭据或本机路径。历史 `main` CI 与 Tag Release 均通过 301 项测试、类型检查、构建、10 文件白名单、目录 composition，以及 Linux / Windows / macOS exact-tarball 安装、卸载、数据保留和重装；正式包为 691,872 bytes，解包后 3,423,868 bytes，SHA-256 `b6038ff79050b35fc70af48489d017ddc346f28a6e9bb60b018153f39d930dae`，manifest 为 clean、schema 20、Harness rc.7。新 `dsh-script` 仓库不继承该 Tag 或 Release，后续正式附件必须按 ADR-104 重新生成和验收。 |
+| Script Studio v2 Stage 0 目标与架构重置 | 已完成 | 产品已硬切为剧集/电影剧本平台；Codex `0.150.1` marketplace plugin 与 DSH rc.7 Bundle 接口完成事实核验；双宿主薄适配器、共享 Core/API、PostgreSQL + RLS、S3 对象存储、CRDT Draft、OIDC、RBAC/ABAC、outbox、离线缓存及只读小说 importer 已写入 Baseline v2。13 份现行文档链接/格式通过检查，历史资产 39 个测试文件 / 311 项测试、类型检查、构建和 pack audit 通过。README、AGENTS、安装/兼容/隐私文档已清除旧小说运行模式；历史 Bundle 已标记 private。Stage 1 尚未开始，不新增功能。 |
+| Script Studio v2 Stage 1 纯核心首切片 | 进行中（首切片已完成） | 未提交 v21 compatibility projection 已撤回；新增 `@script-studio/domain` 与 `@script-studio/contracts`，只表达剧集/电影、Team 到 Beat 归属、电影单系统 Season/单主 Episode、剧集非空 Season、位置/story order、角色权限、跨 Team 拒绝、归档/revision 写屏障，以及 hierarchy DTO、命令、强类型事件和端口。Explore 子代理复审的六项边界问题均已修复，真实 JS/d.ts 和 workspace import smoke test 通过。全 workspace 41 个测试文件 / 315 项测试、类型检查、构建和格式检查通过；Application 与 Canon/Approval/Audit 等后续契约未完成。 |
+| Script Studio v2 Stage 1 审批与 Project Canon 切片 | 进行中（第二切片已完成） | 新增 Bible/Canon/Promotion/Draft/immutable Version/Approval/Grant/Audit 领域模型及宿主无关 Application。Draft 提交和 Version 审批/Project Canon 在 UnitOfWork 内原子执行，使用 Team/operation/key/requestHash 幂等 claim、ready 对象归属/hash 校验、Episode 版本指针和独立失败审计。Explore 复审的五项事务安全问题均已修复；中途故障、权限拒绝、revision conflict、重放与请求指纹冲突均有测试。全 workspace 43 个测试文件 / 326 项测试、类型检查、JS/d.ts 构建、exports、pack audit 和隔离扫描通过。 |
+| Script Studio v2 Stage 1 IP 治理切片 | 进行中（第三切片已完成） | 完成 Promotion 提议/决定、批准后 IP Bible Entry、Cross-IP Grant 创建/撤销；来源 Canon hash 和 Selection Snapshot/scopes 冻结，Project Canon 不被 Promotion 改写。目标 IP revision、Team 权限、原子幂等、全 DomainError 审计和强类型事件已覆盖。可复用 Governance Repository contract suite 验证租户隔离、事务回滚/claim 释放、不可变 Snapshot 和 active/revoked Grant。全 workspace 45 个测试文件 / 335 项测试、类型检查、JS/d.ts 构建、pack audit 和隔离扫描通过。 |
 
 ---
 
-## 24. 最终架构结论
+## 24. 历史 Novel Studio 架构结论（已被 Script Studio v2 规范取代）
+
+以下内容仅描述历史实现，不是现行目标架构。当前架构以 `docs/spec/architecture.md`、`host-plugin-contract.md` 和 `cloud-collaboration.md` 为准。
 
 本项目最终采取：
 

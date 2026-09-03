@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@script-studio/domain": ["../script-domain/lib/index.d.ts"],
+      "@script-studio/domain/governance": ["../script-domain/lib/governance.d.ts"],
+      "@script-studio/contracts": ["../script-contracts/lib/index.d.ts"],
+      "@script-studio/contracts/governance": ["../script-contracts/lib/governance.d.ts"]
+    },
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "lib"
+  },
+  "include": ["src"],
+  "exclude": ["tests"]
+}

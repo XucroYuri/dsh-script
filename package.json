@@ -5,10 +5,13 @@
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "scripts": {
-    "build": "pnpm --filter @novel-studio/dsh-novel-studio build",
+    "build": "pnpm -r --if-present build",
     "pack:audit": "pnpm --filter @novel-studio/dsh-novel-studio pack:audit",
-    "check": "pnpm --filter @novel-studio/dsh-novel-studio check",
-    "test": "pnpm --filter @novel-studio/dsh-novel-studio test",
+    "check": "pnpm -r --if-present check",
+    "test": "pnpm -r --if-present test",
+    "check:stage1": "pnpm --filter @script-studio/domain --filter @script-studio/contracts --filter @script-studio/application check",
+    "test:stage1": "pnpm --filter @script-studio/domain --filter @script-studio/contracts --filter @script-studio/application test",
+    "build:stage1": "pnpm --filter @script-studio/domain --filter @script-studio/contracts --filter @script-studio/application build",
     "test:composition": "pnpm --filter @novel-studio/dsh-novel-studio test:composition",
     "test:package-install": "pnpm --filter @novel-studio/dsh-novel-studio test:package-install",
     "release:pack": "pnpm --filter @novel-studio/dsh-novel-studio release:pack"

@@ -1,35 +1,69 @@
-# Compatibility matrix
+# Script Studio 兼容矩阵
 
-| Component | Supported baseline | Policy |
+## 当前开发基线
+
+| 组件 | 已核验基线 | 当前状态 |
 |---|---:|---|
-| Novel Studio Bundle | `0.8.0-author-control.6` | Install the exact GitHub Release `.tgz` |
-| DeepSeek Harness | `0.1.0-rc.7` | Exact peer-dependency and release-test baseline |
-| Node.js | 24 | Required by Harness and built-in `node:sqlite` |
-| Profile | `web` | Other profiles do not expose the Novel Studio Client slot |
-| SQLite schema | 1–20 → 20 | Forward migration supported; unknown newer schemas fail closed |
-| Operating system | Linux, Windows, macOS | Exact-tarball install/remove/reinstall is a Release matrix gate |
+| Codex CLI | `0.150.1` | plugin marketplace、manifest、Skills/MCP 形态已核验，Script Studio 插件未实现 |
+| DeepSeek Harness | `0.1.0-rc.7` | 历史 Bundle composition 已核验，目标 DSH 插件未拆分 |
+| Node.js | 24 | 当前 TypeScript/测试工具链基线 |
+| Script Studio API | 未发布 | contract 待 Stage 1 冻结 |
+| PostgreSQL | 未锁定 | Stage 3 通过 migration/RLS/故障测试后锁定 |
+| S3 兼容对象存储 | 未锁定 | Stage 3 通过 hash、签名 URL、版本恢复后锁定 |
+| CRDT | Yjs 候选 | Stage 4 通过并发/离线/恢复压测后锁定 |
+| 操作系统 | macOS/Linux/Windows | 两插件发布前分别验证 |
 
-Compatibility is demonstrated by capability checks and real Harness composition, not only version strings. The `v0.8.0-author-control.6` gate performs type checking, 301 unit/integration tests across 37 files, build, pack audit, directory composition, exact-tarball installation, plugin removal, data-preserving reinstallation, clean-manifest verification, SHA-256 verification, and the three-platform package-install matrix.
+当前没有可安装的 Script Studio 正式 Release，也不承诺历史 Novel Studio 包与目标平台兼容。
 
-## Runtime policy
+## 兼容原则
 
-- An incomplete Foundation is advisory, not a chapter-generation gate.
-- Malformed scene-plan output falls back to a minimal editable plan.
-- Usable prose can be recovered from nonstandard JSON/plain output.
-- Provider output limits receive bounded continuation and may end as a yellow author-review draft.
-- Optional Foundation digest, Memory, relationship, relationship ambiguity/OFF, and Markdown mirror work may degrade to warnings without invalidating safely persisted prose.
-- No usable manuscript, invalid credentials/quota, unrecoverable Provider failure, cancellation, archive state, authority/revision drift, programming errors, and SQLite failure remain hard stops.
+- Codex 和 DSH 插件声明各自支持的 Script Studio API contract version 范围；
+- API 向插件返回 capabilities，插件不得本地伪造缺失能力；
+- 两插件运行同一 Domain/Application/API contract tests；
+- 插件可独立发版，但不能分叉业务语义；
+- 云端 schema 由服务端 migration 管理，插件不执行数据库 DDL；
+- 旧小说数据库只由独立 importer 读取，不是目标运行时 schema；
+- 未经完整 composition 的新 Codex/Harness 版本不标记支持。
 
-The current Harness baseline has no required active conversation-compaction Provider. `novel_doctor` may therefore report Harness compaction unavailable while Novel Studio's own hierarchical long-form memory remains ready.
+## Codex Plugin Gate
 
-## Data and migration
+每个支持版本至少验证：
 
-Schema 20 removes the former `300–20000` chapter-target database constraint. Target words guide planning and pacing; they do not impose a manuscript acceptance limit. Existing schema 1–19 data migrates in place without deleting projects or manuscripts.
+- marketplace list/add/remove；
+- `.codex-plugin/plugin.json`；
+- Skills 和 MCP server；
+- App/Agents/Commands/Hooks 等实际启用表面；
+- 登录、Team scope、工具授权、事件补放和卸载；
+- macOS、Linux、Windows 可用性。
 
-Portable project snapshots v1 and v2 are supported migration inputs. They are allowlisted project packages, not SQLite backups. Full rollback and disaster recovery require a stopped-Harness copy of the complete `$DSH_HOME/data/novel-studio/` directory.
+## DeepSeek Harness Plugin Gate
 
-A database upgraded by a newer schema must not be opened with an older Bundle. Harness releases newer than `0.1.0-rc.7` are not claimed compatible until the complete release gate and browser regression pass against that version.
+每个支持版本至少验证：
 
-## Release truth
+- 官方 Bundle 安装、升级、移除；
+- Host service、Tools、Credentials、LLM 和 Client Slot；
+- 登录、Team scope、工具授权、事件补放和卸载；
+- exact package 在 macOS、Linux、Windows 的组合运行；
+- 不修改官方安装目录、依赖、构建产物或 DOM。
 
-Only the `.tgz`, `SHA256SUMS`, and `release-manifest.json` attached to the matching [GitHub Release](https://github.com/XucroYuri/dsh-script/releases) are formal distribution artifacts. The manifest must identify the tag commit and report `workingTreeDirty: false`. GitHub source archives and a dirty local `pnpm release:pack` output are not formal Bundle releases.
+## Cloud Contract Gate
+
+- PostgreSQL migration、RLS 和跨 Team 拒绝；
+- 对象存储 pending/ready、hash、短期签名 URL 和版本恢复；
+- outbox/worker 至少一次执行与幂等；
+- Draft CRDT 并发、断网和重连；
+- Approval/Canon 单写竞争；
+- API/WebSocket 向后兼容和 event cursor；
+- PITR、灾难恢复、审计和数据导出。
+
+## 发布真相
+
+只有 clean Tag CI 生成并经过回下载验证的工件才是正式发布：
+
+- Codex marketplace plugin；
+- DSH exact package；
+- 云服务镜像与 SBOM/provenance；
+- migration 和 API contract version；
+- SHA-256/签名与发布说明。
+
+源码压缩包、dirty working tree 工件和历史 Novel Studio Release 都不是 Script Studio 正式分发物。

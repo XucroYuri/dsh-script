@@ -1,0 +1,195 @@
+# Script Studio 重构与交付计划
+
+状态：Active v2  
+日期：2026-09-03
+
+## 1. 原则
+
+- 先规范，后实现；宿主无关核心先于插件；云端权威先于多人协作；
+- 目标运行时只使用剧本领域，不保留小说媒介、旧 API、旧包名或 legacy 投影；
+- 旧 Novel Studio 数据由独立只读 importer 一次性迁移，源数据库不修改；
+- Codex 与 DeepSeek Harness 是平等宿主，必须通过同一 API 与 contract tests；
+- Team 是真实租户和权限边界，云数据库与对象存储从第一版 schema 开始按 Team 隔离；
+- 实时协作只修改 Draft，审批版本和 Canon 不可变；
+- 每阶段只交付一个可验证垂直切片，未达到退出门不得进入下一阶段。
+
+## 2. 当前状态
+
+- 新仓库：已完成；
+- Product/Domain SPEC：已按纯剧本方向更新；
+- Codex plugin 接口：已在 `codex-cli 0.150.1` 核验 manifest、marketplace、Skills、MCP 和可选 App 结构；
+- DeepSeek Harness plugin：已有成熟 Bundle 实现，可作为适配器拆分来源；
+- 云协作架构：规范已建立，尚未实现；
+- 当前 `packages/bundle`：仍是 Novel Studio 单体实现，不是目标架构；
+- 当前 schema v21 compatibility projection：与 v2 目标冲突，标记为 Rejected Spike，进入 Stage 1 时撤回；
+- 当前未提交实现不得作为新阶段的默认基础，保留测试证据用于抽取业务能力。
+
+## 3. 阶段路线
+
+### Stage 0：规范重开与目标冻结
+
+状态：已完成（2026-09-03）。
+
+验证记录：Codex `0.150.1` 的 `plugin add/list/remove`、marketplace、`.codex-plugin/plugin.json`、Skills、MCP 与可选 App 结构已通过本机 CLI 和官方 curated plugin 样例核验；DSH rc.7 既有接口事实保留。13 份现行文档链接与 Markdown 格式通过检查，禁止的小说媒介词只出现在否定项、历史说明和 importer 边界。历史实现的类型检查、39 个测试文件 / 311 项测试、构建和 pack audit 通过；这些测试只证明待抽取资产可用，不代表新架构已经实现。
+
+范围：
+
+- 将产品切换为纯剧集/电影剧本平台；
+- 建立 Codex/DSH 双宿主插件契约；
+- 建立 PostgreSQL、对象存储、CRDT、认证授权和离线架构；
+- 重写迁移路线、Agent 门禁、README 和 ADR；
+- 明确旧小说系统只是 importer 来源，不是运行时兼容目标。
+
+退出门：
+
+- `medium` 只有 `episodic | feature-film`；
+- Codex 与 DSH 插件职责和真实接口基线明确；
+- Team 多租户、RBAC/ABAC、RLS、对象隔离和审计明确；
+- Draft 协作、不可变版本、审批和 Canon 边界明确；
+- 所有 SPEC、README、AGENTS 不再要求旧 API/旧表双写；
+- 当前实现冲突清单和撤回策略明确；
+- 文档链接、术语和格式检查通过。
+
+### Stage 1：纯剧本核心与应用契约
+
+状态：进行中。第一切片已完成（2026-09-03）：撤回未提交的 v21 compatibility projection，新建 `@script-studio/domain` 与 `@script-studio/contracts`。Domain 已覆盖 branded IDs、剧集/电影媒介、Team 到 Beat 归属、电影单系统 Season/单主 Episode、剧集非空 Season、位置与 story order、角色权限、跨 Team 拒绝、归档和 revision 写屏障；Contracts 已定义内容隔离 hierarchy DTO、命令、强类型事件和返回 Domain aggregate 的 Repository/Authorizer 端口。两个包生成真实 JS/d.ts，并已从 workspace 消费者完成运行时 import smoke test；源码不依赖宿主、数据库、HTTP、React 或文件系统。Explore 子代理复审发现的 Team scope 可选、DTO/Domain 反向耦合、空季、版本指针、弱类型事件和无 JS 产物六项问题均已关闭。第一切片全 workspace 41 个测试文件 / 315 项测试通过。
+
+第二切片已完成（2026-09-03）：Domain 新增 IP Bible、Project Canon、IP Promotion、Draft、不可变 Manuscript Version、Approval、Cross-IP Grant 和 append-only Audit 模型；`@script-studio/application` 实现 Draft 提交与 Version 审批/Project Canon 原子用例。UnitOfWork 使用 Team/operation/key/requestHash 原子幂等 claim，提交前验证 ready 内容对象的 Team/Project/hash，推进 Episode draft/approved 指针；forbidden/revision conflict 在业务回滚后经独立幂等 SecurityAuditPort 记录。Explore 复审发现的拒绝无审计、幂等串型/并发、对象错绑、draft pointer 和故障回滚五项问题均已关闭。当前全 workspace 43 个测试文件 / 326 项测试、类型检查、真实 JS/d.ts 构建、运行时 exports、历史 pack audit 和纯核心依赖扫描通过。IP Promotion/Grant 的 Application 用例与完整 Repository contract suite 仍待下一切片。
+
+第三切片已完成（2026-09-03）：Application 实现 Project Canon Promotion 提议/决定、批准后 IP Bible Entry、Cross-IP Grant 创建/撤销。Promotion 冻结来源 Canon hash，提议时拒绝 inactive fact，决定时复检来源未漂移；Grant 只允许冻结 Selection Snapshot 的 scope 子集，撤销不修改 Snapshot。目标 IP revision、Team 权限、requestHash 幂等、成功/失败 Audit/Event 均纳入 UnitOfWork 或独立 SecurityAudit。可复用 Governance Repository contract suite 覆盖 Team-scoped 读取、claim/complete/replay、requestHash 冲突、事务回滚与 claim 释放、不可变 Snapshot/scopes、active/revoked Grant 语义。Explore 复审发现的全失败审计、权限原因失真、晚校验 Canon 和 contract 假阳性问题均已关闭。全 workspace 45 个测试文件 / 335 项测试、类型检查、JS/d.ts 构建、历史 pack audit 和纯核心依赖扫描通过。
+
+范围：
+
+- 从 `packages/bundle` 抽取 `domain / application / contracts / ports`；
+- 只定义 Team/IP/Project/Season/Episode/Sequence/Scene/Beat；
+- Project medium 只允许剧集和电影；
+- 定义成员、授权、Bible、Canon、Draft、Version、Approval、Audit 和 Grant；
+- 撤回 v21 compatibility projection、legacy foreign key 和运行时 mapper；
+- 建立新 API DTO、错误码、事件和 Repository contract tests。
+
+退出门：
+
+- Domain 不依赖 Codex、Harness、数据库、对象存储、React 或网络；
+- 电影一 Season/一主 Episode、剧集多季多集、全层归档和顺序不变量通过；
+- Project Canon 与 IP Canon/Promotion 分离；
+- 权限由应用服务执行并有拒绝测试；
+- 代码、测试、导出类型和文案中不存在目标运行时的 Book/Volume/Chapter 或 `novel` medium；
+- `pnpm check/test/build` 和 contract tests 通过。
+
+### Stage 2：双宿主最小垂直闭环
+
+范围：
+
+- 创建 `plugins/codex-script-studio`；
+- 创建 `plugins/dsh-script-studio`；
+- 建立共享 `HostIdentity/Auth/Tool/Interaction/Model/Event/Telemetry` 端口；
+- Codex 首版使用 `.codex-plugin/plugin.json + Skills + MCP`；
+- DSH 使用 Bundle + Host service + Client Slot；
+- 两宿主连接同一个本地开发 API，完成只读 Team/IP/Project 和单个命令闭环。
+
+退出门：
+
+- Codex marketplace 安装、列出、移除和 MCP tool smoke test 通过；
+- DSH 官方安装、composition、Client 加载和 tool smoke test 通过；
+- 两宿主运行同一 API contract tests 并返回相同业务结果；
+- 适配器不包含领域规则或直接数据库访问；
+- 任一宿主卸载不影响共享数据。
+
+### Stage 3：云端单用户权威
+
+范围：
+
+- PostgreSQL schema、RLS、migration 和 transactional outbox；
+- S3 兼容对象存储、hash、签名 URL 和生命周期；
+- OIDC/OAuth 2.1、Team scope 和短期令牌；
+- API/Worker/Workflow 服务；
+- SQLite 本地缓存与离线 outbox；
+- 单用户 Team 完成 Project/Season/Episode/Draft/Version/Approval/Canon 闭环。
+
+退出门：
+
+- 云数据库和对象存储是唯一最终权威；
+- 所有租户表强制 `team_id`，跨 Team 引用在服务端与 RLS 两层拒绝；
+- 对象 pending/ready、失败补偿和 outbox 重放通过；
+- 离线不可执行审批、Promotion、权限变更和永久删除；
+- PITR、对象版本恢复和插件重连通过；
+- Codex 与 DSH 均能恢复同一云端状态。
+
+### Stage 4：团队协作与权限
+
+范围：
+
+- Membership、Invitation、RBAC + ABAC；
+- Yjs Draft 协作、WebSocket gateway、presence 和 event cursor；
+- 评论、审阅任务、Episode 锁定和返修分支；
+- IP Grant、Project Override 和 IP Promotion；
+- AuditEvent 和团队通知。
+
+退出门：
+
+- 多成员并发编辑不丢失、不乱序；
+- 断网重连和重复 update 幂等；
+- Viewer/Writer/Reviewer/Admin 权限由服务端强制；
+- 旧客户端在锁定、归档或权限撤销后写入被拒绝；
+- 审批竞争只有一个成功；
+- 批准版本 hash 与对象内容一致；
+- Project Canon 不自动污染 IP Canon；
+- 跨 IP 授权和撤销可审计，跨 Team 始终拒绝。
+
+### Stage 5：专业剧本工作台
+
+范围：
+
+- Team/IP/Project/Season/Episode 导航；
+- Sequence/Scene/Beat、场景标题、动作、人物、对白和转场；
+- 分集大纲、Beat Sheet、场景卡和剧本草稿；
+- Fountain/FDX/PDF 导入导出与分页策略；
+- 锁稿、修订色和审阅差异；
+- Codex App 或 DSH Client 使用共享 UI/DTO，宿主壳独立。
+
+退出门：
+
+- 剧集单集和电影主剧本端到端闭环；
+- 结构化 Scene 与正文块使用同一文档模型，不产生双真相；
+- 导入导出 round-trip 与分页验收通过；
+- 桌面和窄屏无重叠或文档级横向溢出；
+- 两宿主状态、权限和事件一致。
+
+### Stage 6：小说数据一次性迁移与正式发布
+
+范围：
+
+- 独立 `novel-importer` 读取旧 SQLite/快照；
+- 用户选择剧集或电影改编目标；
+- 旧正文进入 Source Asset，结构/事实进入待审核候选；
+- 发布 Codex marketplace plugin、DSH plugin 和云服务；
+- 删除目标运行时中的旧小说包名、API、数据路径和文案。
+
+退出门：
+
+- importer 幂等、可重跑、源库只读、失败不改源；
+- 无旧数据库也可全新安装运行；
+- 目标服务和插件不包含 legacy schema/mapper/双写；
+- Codex/DSH 安装升级卸载、云备份恢复和数据导出通过；
+- clean Tag、SHA-256、provenance 和回下载验证通过；
+- README 只描述 Script Studio，不把旧 Novel Studio 当运行模式。
+
+## 4. 每阶段必做验证
+
+1. 聚焦 Domain/Application/API/Infra 测试；
+2. `pnpm check`、`pnpm test`、`pnpm build`、`pnpm pack:audit`、`git diff --check`；
+3. Codex plugin manifest、marketplace install/remove、Skills/MCP composition；
+4. DSH plugin directory composition 和 exact-tarball install/remove；
+5. 云阶段执行 PostgreSQL migration/RLS、对象存储、outbox、PITR 和故障注入；
+6. 协作阶段执行并发编辑、断网、重放、审批竞争和权限撤销；
+7. 更新本文件状态、质量报告和 ADR。
+
+## 5. 当前下一步
+
+Stage 0 已完成。在任何新功能开发前：
+
+1. 建立可复用 Authoring Repository contract suite，覆盖对象元数据、Draft/Version/Episode/Approval/Canon/Audit/Event 和事务回滚；
+2. 审计 Stage 1 的 Domain/Application/API DTO、错误码、事件和端口是否满足全部退出门；
+3. 补齐缺失反例后关闭 Stage 1；
+4. 不在现有 `packages/bundle` 上继续增加 Team、IP、云或 Codex 条件分支；
+5. Stage 1 退出门完成前不创建 Codex/DSH 插件或数据库实现。

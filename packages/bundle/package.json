@@ -1,7 +1,8 @@
 {
   "name": "@novel-studio/dsh-novel-studio",
   "version": "0.8.0-author-control.6",
-  "description": "Local-first professional script and long-form authoring workspace for DeepSeek Harness",
+  "private": true,
+  "description": "Private historical Novel Studio implementation retained for Script Studio refactor extraction",
   "keywords": [
     "deepseek-harness",
     "dsh-plugin",
@@ -63,9 +64,6 @@
   },
   "engines": {
     "node": ">=24"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "dependencies": {
     "@deepseek-ai/cordis": "4.0.1",

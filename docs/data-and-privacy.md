@@ -1,55 +1,90 @@
-# Data and privacy
+# Script Studio 数据、安全与隐私
 
-## Local data boundary
+## Team 租户边界
 
-Novel Studio stores its SQLite database and operational directories under:
+Team 是云端数据、成员和权限的最高隔离边界。所有业务记录必须包含 `team_id`，服务端执行 RBAC/ABAC，PostgreSQL RLS 作为第二道隔离。跨 Team 引用和读取默认拒绝。
 
-```text
-$DSH_HOME/data/novel-studio/
-```
+角色基线：`owner / admin / editor / writer / reviewer / viewer`。角色变更、邀请、授权、导出、审批、IP Promotion 和删除进入 AuditEvent。
 
-This location is separate from the Bundle installation. Plugin removal and code updates are designed to preserve it.
+## 数据存储
 
-The directory may contain manuscripts, immutable version history, batch plans and queues, author-memory revision/source/usage history, Markdown conflicts, relationship candidates and evidence, model and Prompt traces, workflow events, Canon and knowledge records, recovery state, exports, backups, and logs. Treat the complete directory as private user content.
+### PostgreSQL
 
-## Portable project snapshot boundary
+保存 Team、成员、IP、Project、Season、Episode、结构元数据、revision、权限、审批、Canon、工作流、审计、outbox 和对象引用。
 
-The project-library snapshot is a schema-validated, allowlisted migration package for one project. It is not an SQLite export and is not a complete backup of `$DSH_HOME/data/novel-studio/`.
+### 对象存储
 
-Portable snapshot schema v2 contains the schema v1 project metadata and targets, project writing rules, structured Style Profile, Book/Volume/Chapter hierarchy, every immutable manuscript version and its links/status, and every version of the three active foundations: full-book outline, characters, and story timeline. It additionally carries author-owned memory with its complete immutable revision and source history, plus confirmed relationship history, evidence, and the associated entities and aliases. Foundation records retain their dependency links and limited provider/model/prompt-version/hash provenance, but no reusable Prompt Asset or Prompt-selection state. Import remains compatible with schema v1.
+保存来源材料、Draft/批准版本快照、导出、CRDT 压缩快照和恢复对象。对象使用不可猜测 key、内容 hash、静态加密和版本化。客户端只使用短期签名 URL，不获得对象存储主凭据。
 
-The snapshot excludes chapter batches and plans, workflow nodes/events, model runs and generation traces, relationship candidates and extraction runs, reproducible model-derived memories, memory usage records, Markdown bindings and unresolved conflicts, Canon candidates/facts and other knowledge indexes, Prompt Assets and project Prompt selection, live generation state, Harness sessions and workspace selection, Recovery Capsules, original database IDs, local workspace or mirrored-file paths, Markdown-sync state, credentials, environment values, logs, and SQLite files. Confirmed relationship evidence is limited to its own allowlisted portable metadata rather than carrying the source Canon table. Restore creates fresh IDs and deliberately clears machine-local workspace configuration.
+### 本地缓存
 
-Use the snapshot only to migrate or duplicate authoring content. For full rollback or disaster recovery, stop Harness and copy the entire `$DSH_HOME/data/novel-studio/` directory, including SQLite WAL/SHM sidecars when present.
+SQLite 仅用于开发、离线 Draft 缓存和待同步 outbox。缓存按 Team/User 隔离并可清除。云协作模式下它不是最终事实源，缓存损坏不能影响云端数据。
 
-## Model context
+## 实时协作
 
-Generation uses the model provider already selected in Harness. The first full-book-outline, character-system, or story-timeline draft can be generated without any user-written brief. That request sends the project title, genre, audience, the optional brief if present, and approved upstream foundation sections. If the user reviews a draft and chooses to revise it through questions, the provider also receives the current draft and the answers already confirmed in that revision run so it can ask only one to three decisions that would materially change the result. Selected options and custom answers are sent to the same provider on the next evaluation round and, after readiness is confirmed or the bounded intake is closed, as constraints for the revised version. Questions, answers, planning-round numbers, readiness summaries, and structured evaluation outputs are stored in local SQLite, remain scoped to their project and generation run, and are not added to unrelated project prompts. Scene-plan and chapter-draft generation sends the selected Prompt Asset, project writing rules, whichever of the three foundation stages currently have approved versions, current chapter/manuscript state, and applicable Canon/retrieval context. The author may generate without a complete Foundation; missing stages are not fabricated or silently sent. Historical worldbuilding and foreshadowing foundation records remain stored for compatibility but are not silently assembled into the new three-stage chain. Draft or superseded versions are never added to chapter prompts. Recovery context intentionally contains project/chapter pointers, revisions, workflow state, and pending decisions rather than full manuscript text.
+- CRDT update 只影响 Draft；
+- presence、光标和临时选区不写永久审计；
+- 提交审阅时冻结 state vector 并生成不可变版本；
+- 批准版本不能被协作 update 修改；
+- 离线不允许审批、IP Promotion、权限变更或永久删除；
+- 重连先刷新权限和锁定，再按 idempotency key 重放。
 
-Batch planning sends only the selected/current project context needed to propose the requested chapter briefs: approved foundation material, preceding approved chapter context, active author memory, and confirmed relationships. The resulting plan and frozen automation policy are stored locally with the batch. AUTO/YOLO changes approval behavior only; it does not change the selected Harness provider or create a second external service.
+## 模型与 Prompt 数据
 
-Relationship extraction is disabled by default, and leaving it OFF does not disable chapter or YOLO writing. When the author enables AUTO or YOLO, extraction uses approved foundation content, the current approved manuscript, Canon, timeline, and foreshadowing sources for that project. Drafts and historical projects are not scanned by default. Candidates, confidence, entity mappings, and evidence are stored locally; unknown or ambiguous candidates remain pending, candidates never enter later prompts, and extraction warnings do not broaden the data sent to the model. Only confirmed relationships may be included in generation context. No external graph database or vector service is introduced.
+每次模型运行记录 Provider、模型、Prompt version、Selection Snapshot、来源 ID 和用量。对外模型只接收当前任务必需的最小内容。
 
-Author memory is stored in SQLite with immutable revisions. When optional Markdown synchronization is enabled, project-relative files are a mirror and editable reference rather than the authority for Canon. If both database and file change, the shared base plus both current sides are retained locally; the author sees base→SQLite and base→Markdown diffs, may edit the proposed merge, and saves the resolution as a new immutable revision. ModelRun usage rows record inclusion, truncation, estimated tokens, and omission reason; they do not contain provider credentials. Memory-list and usage-history cursors are local pagination tokens, not external tracking identifiers.
+- Project Draft 默认不跨 Project 使用；
+- 同 IP 只共享已批准 IP Bible/Canon；
+- 跨 IP 需要显式 Grant 和冻结 Selection Snapshot；
+- 跨 Team 不允许；
+- 导入材料按数据处理，不能改变系统指令或工具权限；
+- 日志和诊断不记录正文、Prompt 全文、访问令牌或签名 URL。
 
-Historical-project original excerpts are disabled by default. Enabling them is an explicit per-project choice; summaries and structural metadata should be preferred where sufficient.
+## 凭据
 
-Inline selection rewriting sends the selected fragment, at most 2,400 surrounding characters on each side, project writing rules, approved foundation constraints, and applicable compact long-novel summaries to the current Harness model provider. It does not send the entire editable chapter merely to perform a short rewrite. The model response is treated only as a replacement candidate; it does not update SQLite or create a manuscript version until the Client verifies the frozen text snapshot, applies only the selected range, and the normal save/autosave path creates a new immutable draft version.
+- 用户登录采用 OIDC/OAuth 2.1；
+- 访问令牌短期有效，刷新令牌可撤销；
+- Codex/DSH 插件使用宿主安全存储或系统密钥链；
+- 插件不持有 PostgreSQL 密码、对象存储主密钥或服务端模型密钥；
+- 凭据不得进入仓库、项目文件、正文、截图、Issue 或遥测。
 
-## Package boundary
+## 旧小说数据
 
-The package `files` whitelist includes only:
+旧 Novel Studio 数据只由独立 importer 读取：
 
-- `lib/`
-- `cordis.patch.yml`
-- `README.md`
-- `LICENSE`
-- npm-generated package metadata
+- 源 SQLite/快照保持只读；
+- 旧正文作为 Source Asset，不自动成为剧本或 Canon；
+- 人物、事实和结构作为待审核候选；
+- importer 保存 source ID、hash 和 target ID，支持幂等重跑；
+- 迁移失败不修改、移动或删除源数据；
+- Script Studio 云服务和插件不直接打开旧数据库。
 
-It must not include databases, manuscripts, exports, backups, logs, credentials, environment files, test fixtures containing user text, or absolute paths from the build machine. Source maps contain project source code for diagnostics but no runtime database or user manuscript data.
+## 备份与恢复
 
-Before release, run a dry-run pack audit and inspect the exact tarball file list and built files for credentials and absolute local paths.
+- PostgreSQL 使用加密备份和 PITR；
+- 对象存储启用版本化、复制或等价恢复能力；
+- 定期演练数据库与对象引用的一致恢复；
+- Team 导出包含可移植数据清单、对象 hash 和审计范围；
+- 删除采用明确保留期和异步擦除流程；
+- 卸载 Codex 或 DSH 插件不删除云端 Team 数据。
 
-## Public source repository boundary
+## 数据驻留与第三方
 
-The public Git repository contains source code, tests, and documentation. Git ignore rules exclude local databases, runtime data directories, exports, backups, logs, generated `lib/` output, and release archives. Test fixtures must use fictional sample content owned by the project; real user manuscripts and project-specific production traces must be removed or anonymized before a commit is published.
+正式服务必须公开：
+
+- 数据区域和驻留策略；
+- 数据库、对象存储、模型和监控提供商；
+- 哪些内容会发送到哪个模型 Provider；
+- 保留期、备份周期、恢复目标和删除时限；
+- 子处理者与跨境传输条件。
+
+在这些信息可查询前，不得宣称满足特定行业或地区合规认证。
+
+## 公共仓库边界
+
+仓库只包含源代码、虚构测试数据和匿名化文档，不包含：
+
+- 用户剧本、来源材料或导出；
+- 数据库、对象快照、CRDT update 或备份；
+- OIDC token、API Key、签名 URL 或环境文件；
+- 真实 Team/成员信息、生产日志或本机绝对路径。

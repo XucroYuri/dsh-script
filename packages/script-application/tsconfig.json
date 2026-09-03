@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@script-studio/domain": ["../script-domain/src/index.ts"],
+      "@script-studio/domain/governance": ["../script-domain/src/governance.ts"],
+      "@script-studio/contracts": ["../script-contracts/src/index.ts"],
+      "@script-studio/contracts/governance": ["../script-contracts/src/governance.ts"],
+      "@script-studio/contracts/testing/governance-repository-contract": ["../script-contracts/testing/governance-repository-contract.ts"]
+    }
+  },
+  "include": ["src", "tests"]
+}
