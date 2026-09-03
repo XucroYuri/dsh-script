@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@script-studio/contracts": ["../../packages/script-contracts/src/index.ts"],
+      "@script-studio/domain": ["../../packages/script-domain/src/index.ts"]
+    }
+  },
+  "include": ["src", "tests"]
+}

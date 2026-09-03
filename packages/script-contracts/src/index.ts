@@ -1,4 +1,5 @@
 export * from './commands.js'
+export * from './cloud-api.js'
 export * from './authoring.js'
 export * from './dto.js'
 export * from './events.js'
