@@ -1,0 +1,29 @@
+{
+  "name": "@script-studio/infra-sqlite-cache",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local hierarchy cache and Draft-only offline outbox for Script Studio",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["lib", "package.json"],
+  "scripts": {
+    "check": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@script-studio/contracts": "workspace:*",
+    "@script-studio/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

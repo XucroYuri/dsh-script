@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@script-studio/contracts": ["../script-contracts/lib/index.d.ts"],
+      "@script-studio/domain": ["../script-domain/lib/index.d.ts"]
+    },
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "lib"
+  },
+  "include": ["src"],
+  "exclude": ["tests"]
+}
