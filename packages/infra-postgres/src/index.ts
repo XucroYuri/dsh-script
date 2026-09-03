@@ -1,3 +1,4 @@
+import { Pool, type PoolConfig } from 'pg'
 import type { CloudHierarchyRepositoryPort, VerifiedCloudSession } from '@script-studio/contracts'
 import {
   asBeatId, asEpisodeId, asIpId, asProjectId, asSceneId, asSeasonId, asSequenceId, asTeamId, asVersionId,
@@ -48,6 +49,7 @@ export interface PostgresTransactionPort extends PostgresQueryPort {
 
 export interface PostgresTransactionProviderPort {
   open(): Promise<PostgresTransactionPort>
+  release(transaction: PostgresTransactionPort): Promise<void>
 }
 
 export async function withTenantTransaction<Result>(
@@ -150,6 +152,57 @@ export class PostgresTransactionalHierarchyRepository implements CloudHierarchyR
 
   async getProjectHierarchy(session: VerifiedCloudSession, projectId: ProjectId): Promise<ProjectHierarchy | null> {
     const transaction = await this.transactions.open()
-    return withTenantTransaction(transaction, session, active => new PostgresHierarchyRepository(active).getProjectHierarchyForTeam(session.teamId, projectId))
+    let primaryError: unknown
+    try {
+      return await withTenantTransaction(transaction, session, active => new PostgresHierarchyRepository(active).getProjectHierarchyForTeam(session.teamId, projectId))
+    } catch (cause) {
+      primaryError = cause
+      throw cause
+    } finally {
+      try { await this.transactions.release(transaction) } catch (releaseError) { if (primaryError === undefined) throw releaseError }
+    }
   }
+}
+
+export interface PostgresClientPort extends PostgresQueryPort {
+  release(destroy?: boolean): void
+}
+
+export interface PostgresPoolPort {
+  connect(): Promise<PostgresClientPort>
+}
+
+export class PgTransactionClient implements PostgresTransactionPort {
+  private released = false
+
+  constructor(private readonly client: PostgresClientPort) {}
+
+  async query<Row extends Record<string, unknown>>(text: string, values: readonly unknown[]): Promise<{ rows: readonly Row[] }> {
+    return this.client.query<Row>(text, [...values])
+  }
+
+  async begin(): Promise<void> { await this.query('BEGIN', []) }
+  async commit(): Promise<void> { await this.query('COMMIT', []) }
+  async rollback(): Promise<void> { await this.query('ROLLBACK', []) }
+  release(destroy = false): void {
+    if (this.released) return
+    this.released = true
+    this.client.release(destroy)
+  }
+}
+
+export class PgTransactionProvider implements PostgresTransactionProviderPort {
+  constructor(private readonly pool: PostgresPoolPort) {}
+
+  async open(): Promise<PostgresTransactionPort> { return new PgTransactionClient(await this.pool.connect()) }
+
+  async release(transaction: PostgresTransactionPort): Promise<void> {
+    if (!(transaction instanceof PgTransactionClient)) throw new Error('Transaction was not opened by this provider.')
+    transaction.release()
+  }
+}
+
+export function createPgTransactionProvider(config: PoolConfig): { provider: PgTransactionProvider; close: () => Promise<void> } {
+  const pool = new Pool(config)
+  return { provider: new PgTransactionProvider(pool), close: () => pool.end() }
 }

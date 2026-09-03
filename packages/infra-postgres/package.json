@@ -19,9 +19,11 @@
   },
   "dependencies": {
     "@script-studio/contracts": "workspace:*",
-    "@script-studio/domain": "workspace:*"
+    "@script-studio/domain": "workspace:*",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
+    "@types/pg": "^8.23.1",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   PostgresHierarchyRepository,
+  PgTransactionProvider,
   PostgresTransactionalHierarchyRepository,
+  type PostgresClientPort,
   type PostgresQueryPort,
   type PostgresTransactionPort,
   withTenantTransaction,
@@ -111,6 +113,7 @@ describe('PostgreSQL hierarchy repository', () => {
     const transaction = new HierarchyTransactionStub()
     const repository = new (class {
       async open(): Promise<PostgresTransactionPort> { return transaction }
+      async release(): Promise<void> { transaction.events.push('release') }
     })()
     const hierarchy = await new PostgresTransactionalHierarchyRepository(repository).getProjectHierarchy(
       { subject: 'oidc|writer', teamId, memberId: asMemberId('member-1') },
@@ -118,12 +121,34 @@ describe('PostgreSQL hierarchy repository', () => {
     )
 
     expect(hierarchy?.project.id).toBe(projectId)
-    expect(transaction.events).toEqual(['begin', 'query', 'query', 'query', 'query', 'query', 'query', 'query', 'query', 'commit'])
+    expect(transaction.events).toEqual(['begin', 'query', 'query', 'query', 'query', 'query', 'query', 'query', 'query', 'commit', 'release'])
     expect(transaction.calls.slice(0, 2)).toEqual([
       { text: "select set_config('app.team_id', $1, true)", values: ['team-1'] },
       { text: "select set_config('app.member_id', $1, true)", values: ['member-1'] },
     ])
     expect(transaction.calls.slice(2).every(call => JSON.stringify(call.values) === JSON.stringify(['team-1', 'project-1']))).toBe(true)
+  })
+
+  it('uses one checked-out client for transaction statements and releases it once', async () => {
+    const client: PostgresClientPort & { calls: QueryCall[]; releases: number } = {
+      calls: [],
+      releases: 0,
+      async query<Row extends Record<string, unknown>>(text: string, values: readonly unknown[]): Promise<{ rows: readonly Row[] }> {
+        this.calls.push({ text, values: [...values] })
+        return { rows: [] as readonly Row[] }
+      },
+      release() { this.releases += 1 },
+    }
+    const provider = new PgTransactionProvider({ connect: async () => client })
+    const transaction = await provider.open()
+    await transaction.begin()
+    await transaction.query('select 1', ['value'])
+    await transaction.commit()
+    await provider.release(transaction)
+    await provider.release(transaction)
+
+    expect(client.calls.map(call => call.text)).toEqual(['BEGIN', 'select 1', 'COMMIT'])
+    expect(client.releases).toBe(1)
   })
 })
 
