@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "script-studio": {
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs",
+        "--stdio"
+      ],
+      "cwd": ".",
+      "required": true
+    }
+  }
+}

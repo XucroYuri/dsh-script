@@ -1,0 +1,38 @@
+{
+  "name": "script-studio-codex",
+  "version": "0.1.0",
+  "description": "Script Studio screenplay development tools for Codex.",
+  "author": {
+    "name": "XucroYuri",
+    "url": "https://github.com/XucroYuri"
+  },
+  "homepage": "https://github.com/XucroYuri/dsh-script",
+  "repository": "https://github.com/XucroYuri/dsh-script",
+  "license": "MIT",
+  "keywords": [
+    "script-studio",
+    "screenwriting",
+    "screenplay",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Script Studio",
+    "shortDescription": "Build episodic and feature-film screenplays",
+    "longDescription": "Use the shared Script Studio Host Contract to inspect a screenplay project hierarchy and create an episodic Season with its first Episode.",
+    "developerName": "XucroYuri",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/XucroYuri/dsh-script",
+    "defaultPrompt": [
+      "Inspect the current Script Studio project hierarchy",
+      "Create the next episodic Season in Script Studio"
+    ],
+    "brandColor": "#4176E6",
+    "screenshots": []
+  }
+}

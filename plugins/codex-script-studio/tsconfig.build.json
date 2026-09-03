@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@script-studio/contracts/host": ["../../packages/script-contracts/lib/host-contract.d.ts"]
+    },
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "lib"
+  },
+  "include": ["src"],
+  "exclude": ["tests"]
+}
