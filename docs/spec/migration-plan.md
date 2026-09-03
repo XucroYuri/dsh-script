@@ -114,7 +114,7 @@
 
 ### Stage 3：云端单用户权威
 
-状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片、hierarchy query/transaction port、OIDC RS256 verifier、HTTP composition 与 node-postgres client lifecycle 已完成本地门禁；下一切片为 SQLite cache/outbox。尚未连接真实云数据库、对象存储或 IdP。
+状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片、hierarchy query/transaction port、OIDC RS256 verifier、HTTP composition、node-postgres client lifecycle 与 SQLite cache/outbox 已完成本地门禁；下一切片为真实 PostgreSQL/RLS 与生产 composition 接线。尚未连接真实云数据库、对象存储或 IdP。
 
 范围：
 
@@ -172,14 +172,20 @@
 - `PostgresTransactionalHierarchyRepository` 在成功或异常路径都 release client，release 失败不会覆盖已有业务异常，重复 release 由 client 屏障为幂等；
 - 运行时新增 `pg` 依赖，9 项 infra-postgres 测试覆盖 provider/client 调用顺序、资源 release 和完整 repository 事务；真实数据库连接、RLS、TLS 配置和 migration 执行仍未验收。
 
+当前已完成的第八个切片：
+
+- 新增独立 `@script-studio/infra-sqlite-cache`，只保存 Team/Project hierarchy 快照与 `draft-update` 离线 outbox，不进入历史 `packages/bundle`；
+- outbox 以 Team/operation/idempotency key 唯一约束去重，claim 在 `BEGIN IMMEDIATE` 内原子抢占，ack 删除，失败按 attempt 上限重新排队或进入 failed；
+- 重启恢复 in-flight 条目，payload 只允许 Draft 更新字段并主动丢弃未知字段，离线 API 不暴露审批、Promotion、权限或永久删除；
+- 5 项 SQLite 测试覆盖缓存隔离、幂等冲突、claim/ack/fail、重启恢复和失败上限；本地缓存加密、云端重连同步和服务端 idempotency 响应仍待后续门禁。
+
 下一切片：
 
 - 在可用 PostgreSQL 中执行 migration 与 hierarchy 读事务，验证 RLS/复合外键、连接池 TLS 和失败恢复；
 - 将固定配置的 verifier 与事务化 hierarchy repository 接入同一生产 composition，保持 Team scope 只来自 verified session；
-- 用 node-postgres 的同一 checked-out client 执行单事务，并在所有路径 release；pool.query 仅允许单语句非事务场景；
 - 在具备外部服务配置时接入 issuer discovery、token rotation、撤销策略和真实 PostgreSQL RLS；
 - 将 SQLite outbox 接入 API 重连同步与服务端 idempotency 响应；
-- token rotation、真实云 API 部署和生产 observability 留待具备外部服务配置的后续门禁；
+- 生产 TLS、限流、observability、真实云 API 部署和恢复演练留待具备外部服务配置的后续门禁；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。
 
 退出门：
