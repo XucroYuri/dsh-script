@@ -3748,6 +3748,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：Codex 与 DeepSeek Harness 必须证明是同一个 Script Studio 能力的两个薄宿主，而不是各自复制业务规则。Stage 2 因此冻结 `Host Contract v1`、统一 `/api/script-studio/v1/host` 信封、共享 `DevHostApi` fixture 和 parity contract；Codex 使用 marketplace + Skills + MCP stdio，DSH 使用 Bundle + Host service + Client Slot。适配器只负责 HostIdentity、传输与宿主注册，领域规则、授权、幂等和 revision 仍由共享 Domain/Application 执行。真实云端身份、PostgreSQL、对象存储、CRDT 和生产认证明确推迟到后续阶段。
 
+### ADR-112：云端 authority 首切片先冻结 PostgreSQL Team 边界
+
+状态：Accepted
+
+原因：云协作的安全边界必须在业务 API 和对象存储接入前固定，否则跨 Team 引用、重放和 outbox 可能在后续实现中形成无法回滚的旁路。Stage 3 首切片新增独立 `@script-studio/infra-postgres`，以事务 migration 建立 Team/IP/Project/Season/Episode/Sequence/Scene/Beat、Content Object、Audit、Idempotency 和 Outbox 的基础表；层级外键带同一个 `team_id`，租户表启用并强制 RLS，数据库上下文使用 transaction-local `app.team_id` / `app.member_id`。本地静态 SQL 门禁不等同于已部署 PostgreSQL；真实连接、对象存储和 OIDC 由后续切片验收。
+
 ---
 
 ## 23. 实施状态
@@ -3801,7 +3807,8 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 1 审批与 Project Canon 切片 | 进行中（第二切片已完成） | 新增 Bible/Canon/Promotion/Draft/immutable Version/Approval/Grant/Audit 领域模型及宿主无关 Application。Draft 提交和 Version 审批/Project Canon 在 UnitOfWork 内原子执行，使用 Team/operation/key/requestHash 幂等 claim、ready 对象归属/hash 校验、Episode 版本指针和独立失败审计。Explore 复审的五项事务安全问题均已修复；中途故障、权限拒绝、revision conflict、重放与请求指纹冲突均有测试。全 workspace 43 个测试文件 / 326 项测试、类型检查、JS/d.ts 构建、exports、pack audit 和隔离扫描通过。 |
 | Script Studio v2 Stage 1 IP 治理切片 | 进行中（第三切片已完成） | 完成 Promotion 提议/决定、批准后 IP Bible Entry、Cross-IP Grant 创建/撤销；来源 Canon hash 和 Selection Snapshot/scopes 冻结，Project Canon 不被 Promotion 改写。目标 IP revision、Team 权限、原子幂等、全 DomainError 审计和强类型事件已覆盖。可复用 Governance Repository contract suite 验证租户隔离、事务回滚/claim 释放、不可变 Snapshot 和 active/revoked Grant。全 workspace 45 个测试文件 / 335 项测试、类型检查、JS/d.ts 构建、pack audit 和隔离扫描通过。 |
 | Script Studio v2 Stage 1 纯核心与应用契约 | 已完成 | 四个切片完成 hierarchy、Draft/Version/Approval/Project Canon、IP Promotion/Bible、Cross-IP Grant、Audit/Event、原子幂等与 Authoring/Governance Repository contract suites；Version approve/reject 与 Promotion approve/reject 均闭环。最终 46 个测试文件 / 343 项测试、类型检查、JS/d.ts 构建、运行时 exports、历史 pack audit、纯核心隔离、历史 Bundle 零差异和文档门通过。验证报告位于 `docs/verification/stage-1-2026-09-03.md`。 |
-| Script Studio v2 Stage 2 双宿主最小垂直闭环 | 已完成 | `Host Contract v1`、共享 `DevHostApi`、Codex marketplace/Skills/MCP、DSH Bundle/Host service/Client Slot、parity contract 与本地 fixture 已完成。Codex `0.150.1` 官方 marketplace add/list、MCP smoke、remove；DSH `0.1.0-rc.7` 官方 composition、Host route、tool smoke、Client 加载、卸载，以及 exact `.tgz` 安装均通过。全 workspace `pnpm check`、49 个测试文件 / 356 项测试、build、历史及 DSH pack audit、格式检查通过。验证报告位于 `docs/verification/stage-2-2026-09-03.md`；PostgreSQL、对象存储、生产认证和 CRDT 未提前实现。 |
+| Script Studio v2 Stage 2 双宿主最小垂直闭环 | 已完成 | `Host Contract v1`、共享 `DevHostApi`、Codex marketplace/Skills/MCP、DSH Bundle/Host service/Client Slot、parity contract 与本地 fixture 已完成。Codex `0.150.1` 官方 marketplace add/list、MCP smoke、remove；DSH `0.1.0-rc.7` 官方 composition、Host route、tool smoke、Client 加载、卸载，以及 exact `.tgz` 安装均通过。全 workspace `pnpm check`、51 个测试文件 / 356 项测试、build、历史及 DSH pack audit、格式检查通过。验证报告位于 `docs/verification/stage-2-2026-09-03.md`；PostgreSQL、对象存储、生产认证和 CRDT 未提前实现。 |
+| Script Studio v2 Stage 3A PostgreSQL authority foundation | 进行中（首切片已完成） | 新增 `@script-studio/infra-postgres` 与 `0001_cloud_authority`：租户层级、复合 Team 外键、Content Object 引用、Audit、Idempotency、Outbox、RLS/强制 RLS 和 transaction-local session settings 已冻结。4 项 migration shape tests、类型检查和构建通过；本机无 `psql`，Docker daemon 不可用，真实 PostgreSQL 执行留待有运行环境的后续门禁。 |
 
 ---
 
