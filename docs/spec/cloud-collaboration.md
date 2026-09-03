@@ -38,6 +38,8 @@ Codex Plugin / DSH Plugin / Web Client
 
 认证 API 切片补充以下边界：请求先由 `AccessTokenVerifierPort` 验证 Bearer token，再以 verifier 返回的 `VerifiedCloudSession.teamId/memberId` 调用 repository；Client 提供的 Team header 或 body 字段不能覆盖该 scope。当前 API 仅提供只读 hierarchy 路由，测试 verifier/repository 只用于 contract 验证，不代表 OIDC issuer、JWKS、PostgreSQL 或生产部署已接通。
 
+PostgreSQL hierarchy 查询切片补充以下边界：repository 的 root 与五类子节点查询全部使用 `(team_id, project_id)` 参数，不把租户值插入 SQL 文本；映射层把数据库返回的数值 revision/position 归一化为领域值，并把版本指针重新提升为强类型 ID。API 通过 transaction port 在查询前设置 transaction-local Team/member，再由 commit/rollback 收束生命周期；该切片仍未绑定具体 PostgreSQL driver，也未把静态/port 测试描述为真实 RLS 集成。
+
 ### PostgreSQL
 
 事务权威数据：

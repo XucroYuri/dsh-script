@@ -3766,6 +3766,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：插件和 Client 不能成为租户边界的信任根。Stage 3C 新增 `AccessTokenVerifierPort`、`VerifiedCloudSession` 和无框架 `ScriptStudioApi`，只在 Bearer token 验证成功后使用 session 的 Team/member 调用 hierarchy repository；冲突的 `x-team-id` 不参与授权和查询，未认证请求不触发 repository，access token 不回显。该切片只冻结 API 边界与测试 port，OIDC/OAuth 2.1 issuer/JWKS、PostgreSQL repository 和生产部署仍待后续实现。
 
+### ADR-115：PostgreSQL hierarchy 读路径通过参数化 repository 与显式事务边界接入
+
+状态：Accepted
+
+原因：认证 API 已经得到 verified session 后，仍不能让查询层接受 Client 自报的 Team 或把租户值拼入 SQL。Stage 3D 新增 `PostgresHierarchyRepository` 和 `withTenantTransaction`：root 与 hierarchy 子节点查询统一使用 `(team_id, project_id)` 参数，数据库返回值经领域 ID/数值归一化后再形成 `ProjectHierarchy`；事务开始后先写 transaction-local Team/member settings，成功才 commit，工作或 commit 失败则 rollback 并保留原始异常。该切片使用抽象 query/transaction port 和 stub tests，具体 PostgreSQL driver、真实 RLS、HTTP 接线和生产连接仍留待后续门禁。
+
 ---
 
 ## 23. 实施状态
@@ -3823,6 +3829,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3A PostgreSQL authority foundation | 进行中（首切片已完成） | 新增 `@script-studio/infra-postgres` 与 `0001_cloud_authority`：租户层级、复合 Team 外键、Content Object 引用、Audit、Idempotency、Outbox、RLS/强制 RLS 和 transaction-local session settings 已冻结。4 项 migration shape tests、类型检查和构建通过；本机无 `psql`，Docker daemon 不可用，真实 PostgreSQL 执行留待有运行环境的后续门禁。 |
 | Script Studio v2 Stage 3B 不可变对象生命周期契约 | 进行中（契约切片已完成） | 新增 `@script-studio/infra-object-store` 与 `@script-studio/contracts/object-store`：SHA-256、Team-scoped object key、put-if-absent/read 端口和 pending/ready/failed 生命周期已冻结。4 项生命周期测试、类型检查和构建通过；真实 S3/兼容对象存储、签名 URL、数据库事务与恢复演练留待后续门禁。 |
 | Script Studio v2 Stage 3C 认证云 API 只读边界 | 进行中（只读切片已完成） | 新增 `@script-studio/contracts/cloud-api` 与 `@script-studio/script-api`：Bearer session verifier、VerifiedCloudSession、Team-scoped hierarchy route 和稳定错误响应已冻结。4 项 API 测试、类型检查和构建通过；真实 OIDC、PostgreSQL query/transaction、写命令和部署留待后续门禁。 |
+| Script Studio v2 Stage 3D PostgreSQL hierarchy query/transaction port | 进行中（读事务切片已完成） | 新增 `PostgresHierarchyRepository` 与 `withTenantTransaction`：参数化 Team/Project 查询、层级行映射、PostgreSQL numeric 归一化、transaction-local Team/member settings 和 rollback 边界已冻结。7 项 infra-postgres 测试、全仓库 check/test/build、发行包 pack audit 与格式检查通过；具体 driver、真实 RLS、OIDC/HTTP 和部署留待后续门禁。 |
 
 ---
 

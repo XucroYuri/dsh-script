@@ -114,7 +114,7 @@
 
 ### Stage 3：云端单用户权威
 
-状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约与认证云 API 只读切片已完成本地门禁；下一切片为 PostgreSQL repository/query 事务接入。尚未连接真实云数据库或对象存储。
+状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片与 hierarchy query/transaction port 已完成本地门禁；下一切片为真实 OIDC/OAuth 2.1 verifier 与 HTTP/driver 接线。尚未连接真实云数据库或对象存储。
 
 范围：
 
@@ -146,11 +146,18 @@
 - 未认证请求在 repository 查询前结束，错误使用稳定 code，响应不回显 access token；
 - 当前使用抽象 verifier/repository port，未把测试 verifier 或内存仓库描述为 OIDC/PostgreSQL 生产实现。
 
+当前已完成的第四个切片：
+
+- `PostgresHierarchyRepository` 用 `(team_id, project_id)` 参数查询 root 与五类 hierarchy 子节点，并映射回领域 `ProjectHierarchy`；
+- 数据库返回的 bigint/integer revision、position 在边界归一化为安全整数，Episode 版本指针恢复为强类型 `VersionId`；
+- `withTenantTransaction` 在业务 work 前设置 transaction-local Team/member settings，成功 commit，失败 rollback 并保留原始异常；
+- 测试验证所有查询不拼接租户值，覆盖 commit、rollback 和跨 Team 参数边界；具体 PostgreSQL driver 与 live RLS 仍未接通。
+
 下一切片：
 
-- 用 PostgreSQL query/transaction port 接入 hierarchy 行映射，并把 verified session settings 与 repository 查询连通；
-- 为读路径增加事务 rollback、Team scope 和跨 Team composite key 的集成边界；
-- OIDC/OAuth 2.1 issuer/JWKS、token rotation 和真实云 API 部署留待具备外部服务配置的后续门禁。
+- 用具体 PostgreSQL driver/连接池执行 migration 与 hierarchy 读事务，并在可用数据库中验证 RLS/复合外键；
+- 接入 OIDC/OAuth 2.1 issuer/JWKS verifier、短期 token 和 API HTTP server，保持 Team scope 只来自 verified session；
+- token rotation、真实云 API 部署和生产 observability 留待具备外部服务配置的后续门禁；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。
 
 退出门：
