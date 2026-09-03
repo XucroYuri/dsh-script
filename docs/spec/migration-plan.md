@@ -142,7 +142,7 @@
 当前已完成的第三个切片：
 
 - 建立云 API 的 session-verifier port、Team scope 和稳定 hierarchy DTO；
-- API 只接受 verifier 返回的 Team/member，不信任 Client 的 `x-team-id` 或其他租户字段；
+- API 只接受 verifier 返回的完整 session，并把 Team/member 一并传到 repository，不信任 Client 的 `x-team-id` 或其他租户字段；
 - 未认证请求在 repository 查询前结束，错误使用稳定 code，响应不回显 access token；
 - 当前使用抽象 verifier/repository port，未把测试 verifier 或内存仓库描述为 OIDC/PostgreSQL 生产实现。
 
@@ -150,7 +150,7 @@
 
 - `PostgresHierarchyRepository` 用 `(team_id, project_id)` 参数查询 root 与五类 hierarchy 子节点，并映射回领域 `ProjectHierarchy`；
 - 数据库返回的 bigint/integer revision、position 在边界归一化为安全整数，Episode 版本指针恢复为强类型 `VersionId`；
-- `withTenantTransaction` 在业务 work 前设置 transaction-local Team/member settings，成功 commit，失败 rollback 并保留原始异常；
+- `withTenantTransaction` 在业务 work 前设置 transaction-local Team/member settings，成功 commit，失败 rollback 并保留原始异常；API/repository contract 传递完整 verified session，避免 member scope 在事务边界丢失；
 - 测试验证所有查询不拼接租户值，覆盖 commit、rollback 和跨 Team 参数边界；具体 PostgreSQL driver 与 live RLS 仍未接通。
 
 下一切片：
