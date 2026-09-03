@@ -3742,6 +3742,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：继续保留 `novel` medium、Book/Volume/Chapter、旧 API、旧包名和 legacy projection 会让领域、插件、云 schema 和 UI 长期承担两套产品语义。目标运行时因此只支持 `episodic | feature-film`，并从 Team/IP/Project/Season/Episode/Sequence/Scene/Beat 建立权威模型。旧 Novel Studio 数据由独立工具只读导入：正文成为 Source Asset，结构和事实成为待审核改编候选，源数据库保持原样。早期 schema v21 compatibility projection 与旧表双写路线被撤回，不进入正式基线。
 
+### ADR-111：Stage 2 双宿主通过共享本地 Host Contract 完成最小闭环
+
+状态：Accepted
+
+原因：Codex 与 DeepSeek Harness 必须证明是同一个 Script Studio 能力的两个薄宿主，而不是各自复制业务规则。Stage 2 因此冻结 `Host Contract v1`、统一 `/api/script-studio/v1/host` 信封、共享 `DevHostApi` fixture 和 parity contract；Codex 使用 marketplace + Skills + MCP stdio，DSH 使用 Bundle + Host service + Client Slot。适配器只负责 HostIdentity、传输与宿主注册，领域规则、授权、幂等和 revision 仍由共享 Domain/Application 执行。真实云端身份、PostgreSQL、对象存储、CRDT 和生产认证明确推迟到后续阶段。
+
 ---
 
 ## 23. 实施状态
@@ -3795,6 +3801,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 1 审批与 Project Canon 切片 | 进行中（第二切片已完成） | 新增 Bible/Canon/Promotion/Draft/immutable Version/Approval/Grant/Audit 领域模型及宿主无关 Application。Draft 提交和 Version 审批/Project Canon 在 UnitOfWork 内原子执行，使用 Team/operation/key/requestHash 幂等 claim、ready 对象归属/hash 校验、Episode 版本指针和独立失败审计。Explore 复审的五项事务安全问题均已修复；中途故障、权限拒绝、revision conflict、重放与请求指纹冲突均有测试。全 workspace 43 个测试文件 / 326 项测试、类型检查、JS/d.ts 构建、exports、pack audit 和隔离扫描通过。 |
 | Script Studio v2 Stage 1 IP 治理切片 | 进行中（第三切片已完成） | 完成 Promotion 提议/决定、批准后 IP Bible Entry、Cross-IP Grant 创建/撤销；来源 Canon hash 和 Selection Snapshot/scopes 冻结，Project Canon 不被 Promotion 改写。目标 IP revision、Team 权限、原子幂等、全 DomainError 审计和强类型事件已覆盖。可复用 Governance Repository contract suite 验证租户隔离、事务回滚/claim 释放、不可变 Snapshot 和 active/revoked Grant。全 workspace 45 个测试文件 / 335 项测试、类型检查、JS/d.ts 构建、pack audit 和隔离扫描通过。 |
 | Script Studio v2 Stage 1 纯核心与应用契约 | 已完成 | 四个切片完成 hierarchy、Draft/Version/Approval/Project Canon、IP Promotion/Bible、Cross-IP Grant、Audit/Event、原子幂等与 Authoring/Governance Repository contract suites；Version approve/reject 与 Promotion approve/reject 均闭环。最终 46 个测试文件 / 343 项测试、类型检查、JS/d.ts 构建、运行时 exports、历史 pack audit、纯核心隔离、历史 Bundle 零差异和文档门通过。验证报告位于 `docs/verification/stage-1-2026-09-03.md`。 |
+| Script Studio v2 Stage 2 双宿主最小垂直闭环 | 已完成 | `Host Contract v1`、共享 `DevHostApi`、Codex marketplace/Skills/MCP、DSH Bundle/Host service/Client Slot、parity contract 与本地 fixture 已完成。Codex `0.150.1` 官方 marketplace add/list、MCP smoke、remove；DSH `0.1.0-rc.7` 官方 composition、Host route、tool smoke、Client 加载、卸载，以及 exact `.tgz` 安装均通过。全 workspace `pnpm check`、49 个测试文件 / 356 项测试、build、历史及 DSH pack audit、格式检查通过。验证报告位于 `docs/verification/stage-2-2026-09-03.md`；PostgreSQL、对象存储、生产认证和 CRDT 未提前实现。 |
 
 ---
 

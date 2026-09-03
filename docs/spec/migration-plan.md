@@ -80,7 +80,7 @@
 
 ### Stage 2：双宿主最小垂直闭环
 
-状态：进行中（Host Contract 与内存 API 切片已完成，组合切片待验收）。
+状态：已完成（2026-09-03）。Host Contract、共享内存 API、Codex marketplace/MCP、DSH Bundle/Client Slot 和 exact-tarball 安装验收均通过。
 
 范围：
 
@@ -91,11 +91,13 @@
 - DSH 使用 Bundle + Host service + Client Slot；
 - 两宿主连接同一个本地开发 API，完成只读 Team/IP/Project 和单个命令闭环。
 
-当前组合切片：
+已完成组合切片：
 
-- Codex plugin manifest、Skills、MCP stdio server 与 Host Contract v1；
-- DSH Bundle patch、公开 Host HTTP/tool 入口与 Client Slot；
+- Codex plugin manifest、仓库 marketplace、Skills、MCP stdio server 与 Host Contract v1；
+- DSH Bundle patch、公开 Host HTTP/tool 入口与官方 Client Slot；
 - 两宿主用同一内存 DevHostApi fixture 完成 capabilities、hierarchy read、create-season、forbidden 和 idempotency replay；
+- Codex 官方 CLI `0.150.1` 已完成 marketplace add/list、plugin add、MCP smoke、plugin remove；
+- DSH 官方 Harness `0.1.0-rc.7` 已完成 Bundle 安装、composition、网页 Client、Host route、tool smoke、卸载，以及 `.tgz` exact-tarball 重复验证；
 - 组合测试只验证插件生命周期和业务契约，不把本地 fixture 描述为云端或生产认证。
 
 退出门：
@@ -105,6 +107,10 @@
 - 两宿主运行同一 API contract tests 并返回相同业务结果；
 - 适配器不包含领域规则或直接数据库访问；
 - 任一宿主卸载不影响共享数据。
+
+验证报告：`docs/verification/stage-2-2026-09-03.md`。
+
+退出决定：所有 Stage 2 退出门已满足，允许进入 Stage 3 云端单用户权威；PostgreSQL、对象存储、生产认证、实时协作和离线 outbox 不提前进入本阶段。
 
 ### Stage 3：云端单用户权威
 
@@ -197,10 +203,10 @@
 
 ## 5. 当前下一步
 
-Stage 1 已完成。下一步进入 Stage 2 双宿主最小垂直闭环：
+Stage 2 已完成。下一步进入 Stage 3 云端单用户权威：
 
-1. 冻结宿主能力 contract version 和最小 read/command DTO；
-2. 创建 `plugins/codex-script-studio` 的 manifest + Skills + MCP 最小插件；
-3. 创建 `plugins/dsh-script-studio` 薄适配器骨架；
-4. 两宿主连接同一个内存开发 API，执行相同 contract tests；
-5. 不实现 PostgreSQL、对象存储、CRDT 或生产认证，这些属于 Stage 3/4。
+1. 设计 PostgreSQL schema、Team scope、RLS 与 transactional outbox；
+2. 定义对象存储 content hash、pending/ready、签名 URL 与恢复边界；
+3. 建立 OIDC/OAuth 2.1 短期会话与服务端授权；
+4. 将同一个 Host Contract 从内存 fixture 迁移到云端 API，并保留 Codex/DSH parity；
+5. 不在 Stage 3 提前实现 CRDT 实时协作，协作属于 Stage 4。

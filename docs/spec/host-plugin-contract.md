@@ -159,7 +159,7 @@ plugins/dsh-script-studio/
 - `interactiveAppSurface: false`；
 - `telemetry: false`。
 
-首切片只使用内存 DevHostApi，支持 `capabilities / get-project-hierarchy / create-season`。Codex/DSH 两个 TypeScript adapter 必须运行同一个 parity contract，除 HostIdentity 外，对相同 actor/request 返回相同 result、error code、revision 和 idempotency replay。真实 Codex manifest/MCP 进程与 DSH Bundle 生命周期在下一切片核验。
+首切片只使用内存 DevHostApi，支持 `capabilities / get-project-hierarchy / create-season`。Codex/DSH 两个 TypeScript adapter 运行同一个 parity contract，除 HostIdentity 外，对相同 actor/request 返回相同 result、error code、revision 和 idempotency replay。Stage 2 已通过真实 Codex manifest/MCP 进程、DSH Bundle 生命周期、Client Slot、工具注册和 exact-tarball 安装验收。
 
 ### Stage 2 Composition v1
 

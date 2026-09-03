@@ -6,7 +6,7 @@
 
 Script Studio 以 `Team / IP / Project / Season / Episode` 组织专业剧本开发，在 Episode 内继续管理 `Sequence / Scene / Beat`。它同时面向 Codex plugin 和 DeepSeek Harness plugin，两种插件共享同一个领域内核、应用 API 和云端协作数据。
 
-本仓库正在进行架构重构，尚未发布可用的 Script Studio 正式版本。现有 `packages/bundle` 是历史实现资产，不代表目标产品结构，也不应继续作为新增 Team、云协作或 Codex 功能的承载层。
+本仓库正在进行架构重构。Stage 2 双宿主最小闭环已在本地开发环境完成验收；尚未发布可用于生产的 Script Studio 正式版本。现有 `packages/bundle` 是历史实现资产，不代表目标产品结构，也不应继续作为新增 Team、云协作或 Codex 功能的承载层。
 
 ## 产品模型
 
@@ -67,7 +67,7 @@ DeepSeek Harness 侧使用官方 Bundle、Host service、Tools 和 Client Slot�
 
 ## 当前状态
 
-当前阶段：**Stage 1 已完成，Stage 2 双宿主最小闭环即将开始**。
+当前阶段：**Stage 2 已完成，下一步进入 Stage 3 云端单用户权威**。
 
 已经完成：
 
@@ -77,13 +77,15 @@ DeepSeek Harness 侧使用官方 Bundle、Host service、Tools 和 Client Slot�
 - 云数据库、对象存储、实时协作和权限架构；
 - 新的重构阶段与质量门。
 
-下一阶段：**Codex/DSH 双宿主最小垂直闭环**。
+Stage 2 已完成：
 
-- 冻结共享宿主能力与 API contract version；
-- 建立 Codex manifest + Skills + MCP 最小插件；
-- 建立 DSH 薄适配器骨架；
-- 两宿主运行相同 contract tests，不接入云基础设施。
-- Stage 1 结束前不创建 Codex、DSH 或云基础设施实现。
+- Codex 官方 marketplace add/list、plugin add/remove 与 MCP smoke；
+- DSH 官方 Bundle composition、Client Slot、Host route 与 tool smoke；
+- 两宿主共享同一个 Host Contract、内存开发 API 和 parity contract；
+- DSH exact-tarball 安装/组合/卸载验证；
+- 本地 fixture 不代表云端身份、生产认证或持久化数据。
+
+下一阶段：**Stage 3 云端单用户权威**，将实现 PostgreSQL、对象存储、服务端认证与单用户 Project/Season/Episode/Draft/Version/Approval/Canon 闭环。
 
 ## 开发规范
 
