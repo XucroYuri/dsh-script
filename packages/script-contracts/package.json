@@ -16,6 +16,10 @@
       "types": "./src/host-contract.ts",
       "default": "./lib/host-contract.js"
     },
+    "./object-store": {
+      "types": "./src/object-store.ts",
+      "default": "./lib/object-store.js"
+    },
     "./testing/authoring-repository-contract": "./testing/authoring-repository-contract.ts",
     "./testing/governance-repository-contract": "./testing/governance-repository-contract.ts",
     "./testing/host-adapter-parity-contract": "./testing/host-adapter-parity-contract.ts"
