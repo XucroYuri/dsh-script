@@ -114,7 +114,7 @@
 
 ### Stage 3：云端单用户权威
 
-状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片、hierarchy query/transaction port 与 OIDC RS256 verifier 已完成本地门禁；下一切片为具体 PostgreSQL driver/HTTP composition 接线。尚未连接真实云数据库、对象存储或 IdP。
+状态：进行中（2026-09-03）。PostgreSQL authority foundation、不可变对象生命周期契约、认证云 API 只读切片、hierarchy query/transaction port 与 OIDC RS256 verifier 已完成本地门禁；下一切片为 HTTP composition 与具体 PostgreSQL driver 接线。尚未连接真实云数据库、对象存储或 IdP。
 
 范围：
 
@@ -163,7 +163,7 @@
 下一切片：
 
 - 用具体 PostgreSQL driver/连接池执行 migration 与 hierarchy 读事务，并在可用数据库中验证 RLS/复合外键；
-- 将固定配置的 verifier 接入 API HTTP server，保持 Team scope 只来自 verified session；
+- 将固定配置的 verifier 接入无框架 API HTTP adapter，保持 Team scope 只来自 verified session；
 - 在具备外部服务配置时接入 issuer discovery、token rotation、撤销策略和真实 PostgreSQL RLS；
 - token rotation、真实云 API 部署和生产 observability 留待具备外部服务配置的后续门禁；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。

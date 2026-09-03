@@ -3778,6 +3778,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：JWT header 不能决定信任根，未验证 claims 也不能成为 Team scope。Stage 3E 冻结无框架 verifier 边界：配置显式提供 issuer、audience、JWKS endpoint、clock skew 与 claims 名称；只接受 `RS256`，按 `kid` 选择远端 JWKS 中的 RSA 公钥，校验签名、issuer、audience、subject、时间 claims，并将已验证的 Team/member claims 映射为 `VerifiedCloudSession`。不接受 `jku/jwk/x5u` 等 header 变更 key 来源，不记录 token，不把失败详情回显。该切片先完成标准库 crypto 与可注入 JWKS fetch port，真实 OIDC discovery、nonce、refresh rotation、撤销和 HTTP 部署仍留待后续门禁。
 
+### ADR-117：HTTP adapter 只负责稳定 API 信封转换
+
+状态：Accepted
+
+原因：Node/Hono/其他 HTTP 框架不能复制认证、Team scope 或领域错误规则。Stage 3F 冻结 `createScriptStudioHttpHandler`：从 `IncomingMessage` 提取 pathname、headers 和经过约束的 request ID，调用既有 `ScriptStudioApi`，返回 JSON、`no-store` 与原始 API status；adapter 不解析 Bearer、不接触数据库、不记录 token 或正文，未知内部异常统一为安全的 500 响应。TLS、代理信任、限流、监听配置和生产部署继续由宿主/平台层负责。
+
 ---
 
 ## 23. 实施状态
@@ -3837,6 +3843,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3C 认证云 API 只读边界 | 进行中（只读切片已完成） | 新增 `@script-studio/contracts/cloud-api` 与 `@script-studio/script-api`：Bearer session verifier、VerifiedCloudSession、Team-scoped hierarchy route 和稳定错误响应已冻结。4 项 API 测试、类型检查和构建通过；真实 OIDC、PostgreSQL query/transaction、写命令和部署留待后续门禁。 |
 | Script Studio v2 Stage 3D PostgreSQL hierarchy query/transaction port | 进行中（读事务切片已完成） | 新增 `PostgresHierarchyRepository`、`PostgresTransactionalHierarchyRepository` 与 `withTenantTransaction`：完整 verified session 贯穿 API/事务/repository，参数化 Team/Project 查询、层级行映射、PostgreSQL numeric 归一化、transaction-local Team/member settings 和 rollback 边界已冻结。8 项 infra-postgres 测试、全仓库 check/test/build、发行包 pack audit 与格式检查通过；具体 driver、真实 RLS、OIDC/HTTP 和部署留待后续门禁。 |
 | Script Studio v2 Stage 3E OIDC RS256 verifier | 进行中（固定配置 verifier 切片已完成） | 新增独立 `@script-studio/infra-oidc`：固定 issuer/audience/JWKS、RS256/RSA `kid` 校验、签名与时间 claims 验证、Team/member 映射、JWKS cache/key rotation refresh 和 token/header 安全拒绝已冻结。5 项 RSA verifier 测试、全 workspace 60 个测试文件 / 378 项测试、类型检查、构建、发行包审计和格式检查通过；真实 issuer discovery、nonce、token rotation/撤销、HTTP composition 和 IdP 留待后续门禁。 |
+| Script Studio v2 Stage 3F API HTTP composition | 进行中（设计已冻结） | 计划新增 `createScriptStudioHttpHandler`：Node request 到稳定 API request 的 pathname/header/requestId 转换、JSON/no-store 响应和安全异常屏障；TLS/代理/限流、真实数据库/IdP、部署与 observability 留待后续门禁。 |
 
 ---
 

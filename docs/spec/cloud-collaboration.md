@@ -109,6 +109,8 @@ PostgreSQL hierarchy 查询切片补充以下边界：repository 的 root 与五
 
 Stage 3 的 verifier 配置固定可信 issuer、audience 和 JWKS endpoint，只允许预先允许的 `RS256`，按 JWS `kid` 从 JWKS 选择 RSA 公钥并校验签名；同时校验 `iss`、`aud`、`sub`、`exp`、`iat` 和有限时钟偏差，再从已验证 claims 映射 Team/member。JWKS 请求不接受 token header 中的 URL，access token 不进入日志、错误或响应；nonce、refresh token rotation、撤销列表和真实 IdP discovery 仍由后续 HTTP/OIDC 集成门禁覆盖。
 
+HTTP composition 只把 Node `IncomingMessage` 转换成稳定 `ScriptStudioApiRequest`，使用 URL pathname、请求 headers 和受限 request ID 调用 API，再返回 JSON、`application/json`、`no-store` 和 API 原始 status；adapter 不解析 Bearer、不读取或记录正文、不自行决定 Team，也不把 access token 或内部异常回显给 Client。监听地址、TLS、代理信任、限流和生产 observability 不在该无框架 adapter 的信任范围内。
+
 ## 7. 一致性与事务
 
 - 元数据写入使用 expected revision 和乐观并发；
