@@ -30,6 +30,10 @@ Codex Plugin / DSH Plugin / Web Client
 
 ## 3. 数据职责
 
+### Stage 3 首个实现切片
+
+首个云端切片以 `@script-studio/infra-postgres` 的 `0001_cloud_authority` migration 固定数据库安全边界：层级元数据、内容对象引用、Audit、Idempotency 和 Outbox 均按 Team 分区；跨层级引用使用带 `team_id` 的复合外键；所有租户表启用并强制 RLS。API 在事务开始时设置 transaction-local `app.team_id` 与 `app.member_id`，后续查询和写入由 RLS 再次过滤。该切片的本地门禁只检查 SQL 迁移形状，不把静态检查描述成已部署的 PostgreSQL、对象存储或生产认证能力。
+
 ### PostgreSQL
 
 事务权威数据：

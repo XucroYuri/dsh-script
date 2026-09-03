@@ -114,6 +114,8 @@
 
 ### Stage 3：云端单用户权威
 
+状态：进行中（2026-09-03）。当前切片为 PostgreSQL authority foundation：迁移、Team 复合归属约束、RLS、幂等键与 transactional outbox；尚未连接真实云数据库或对象存储。
+
 范围：
 
 - PostgreSQL schema、RLS、migration 和 transactional outbox；
@@ -122,6 +124,14 @@
 - API/Worker/Workflow 服务；
 - SQLite 本地缓存与离线 outbox；
 - 单用户 Team 完成 Project/Season/Episode/Draft/Version/Approval/Canon 闭环。
+
+当前切片：
+
+- 新增独立 `@script-studio/infra-postgres`，不回写历史 `packages/bundle`；
+- migration `0001_cloud_authority` 覆盖 Team、Membership、IP、Project、Season、Episode、Sequence、Scene、Beat、Content Object、Audit、Idempotency 和 Outbox 基础表；
+- 所有租户表使用 `team_id`，层级引用使用同 Team 复合外键，迁移启用并强制 RLS；
+- 应用会话通过 transaction-local `app.team_id` / `app.member_id` 注入数据库上下文，数据库不信任插件或 Client 自报的 Team；
+- 本切片只验证迁移文本与约束形状；真实 PostgreSQL 部署、对象存储、OIDC 和 API 事务测试留在后续切片。
 
 退出门：
 
