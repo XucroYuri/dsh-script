@@ -107,6 +107,8 @@ PostgreSQL hierarchy 查询切片补充以下边界：repository 的 root 与五
 - 邀请、角色变更、授权、导出、审批、Promotion 和删除写 AuditEvent；
 - 跨 Team 数据访问默认永久禁止，未来若有组织间共享必须另立产品与安全规范。
 
+Stage 3 的 verifier 配置固定可信 issuer、audience 和 JWKS endpoint，只允许预先允许的 `RS256`，按 JWS `kid` 从 JWKS 选择 RSA 公钥并校验签名；同时校验 `iss`、`aud`、`sub`、`exp`、`iat` 和有限时钟偏差，再从已验证 claims 映射 Team/member。JWKS 请求不接受 token header 中的 URL，access token 不进入日志、错误或响应；nonce、refresh token rotation、撤销列表和真实 IdP discovery 仍由后续 HTTP/OIDC 集成门禁覆盖。
+
 ## 7. 一致性与事务
 
 - 元数据写入使用 expected revision 和乐观并发；

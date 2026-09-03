@@ -3772,6 +3772,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：认证 API 已经得到 verified session 后，仍不能让查询层接受 Client 自报的 Team 或把租户值拼入 SQL。Stage 3D 新增 `PostgresHierarchyRepository`、`PostgresTransactionalHierarchyRepository` 和 `withTenantTransaction`：完整 verified session 贯穿 API、事务和 repository，root 与 hierarchy 子节点查询统一使用 `(team_id, project_id)` 参数，数据库返回值经领域 ID/数值归一化后再形成 `ProjectHierarchy`；事务开始后先写 transaction-local Team/member settings，成功才 commit，工作或 commit 失败则 rollback 并保留原始异常。该切片使用抽象 query/transaction port 和 stub tests，具体 PostgreSQL driver、真实 RLS、HTTP 接线和生产连接仍留待后续门禁。
 
+### ADR-116：OIDC verifier 只信任固定 issuer/audience/JWKS 与允许算法
+
+状态：Accepted
+
+原因：JWT header 不能决定信任根，未验证 claims 也不能成为 Team scope。Stage 3E 冻结无框架 verifier 边界：配置显式提供 issuer、audience、JWKS endpoint、clock skew 与 claims 名称；只接受 `RS256`，按 `kid` 选择远端 JWKS 中的 RSA 公钥，校验签名、issuer、audience、subject、时间 claims，并将已验证的 Team/member claims 映射为 `VerifiedCloudSession`。不接受 `jku/jwk/x5u` 等 header 变更 key 来源，不记录 token，不把失败详情回显。该切片先完成标准库 crypto 与可注入 JWKS fetch port，真实 OIDC discovery、nonce、refresh rotation、撤销和 HTTP 部署仍留待后续门禁。
+
 ---
 
 ## 23. 实施状态

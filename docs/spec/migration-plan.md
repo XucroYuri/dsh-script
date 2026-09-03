@@ -157,6 +157,7 @@
 
 - 用具体 PostgreSQL driver/连接池执行 migration 与 hierarchy 读事务，并在可用数据库中验证 RLS/复合外键；
 - 接入 OIDC/OAuth 2.1 issuer/JWKS verifier、短期 token 和 API HTTP server，保持 Team scope 只来自 verified session；
+- verifier 首先以固定 issuer/audience/JWKS 配置和 RS256 签名校验形成可测试边界，再接入真实 issuer discovery、token rotation 和撤销策略；
 - token rotation、真实云 API 部署和生产 observability 留待具备外部服务配置的后续门禁；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。
 
