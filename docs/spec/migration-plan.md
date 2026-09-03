@@ -268,10 +268,10 @@
 
 ## 5. 当前下一步
 
-Stage 2 已完成。下一步进入 Stage 3 云端单用户权威：
+Stage 3A–3H 的宿主无关本地切片已完成；下一步进入具备外部服务配置后的云端验证与生产 composition：
 
-1. 设计 PostgreSQL schema、Team scope、RLS 与 transactional outbox；
-2. 定义对象存储 content hash、pending/ready、签名 URL 与恢复边界；
-3. 建立 OIDC/OAuth 2.1 短期会话与服务端授权；
-4. 将同一个 Host Contract 从内存 fixture 迁移到云端 API，并保留 Codex/DSH parity；
+1. 执行 PostgreSQL migration、RLS/复合外键、真实 hierarchy transaction 和 TLS/连接池验证；
+2. 将固定配置 OIDC verifier、事务化 hierarchy repository 和 HTTP adapter 接入同一服务 composition；
+3. 接入 SQLite outbox 的认证重连同步与服务端 idempotency 响应，验证重复/断网/恢复行为；
+4. 接通 S3 兼容对象存储、签名 URL、transactional outbox worker、PITR 和对象版本恢复；
 5. 不在 Stage 3 提前实现 CRDT 实时协作，协作属于 Stage 4。

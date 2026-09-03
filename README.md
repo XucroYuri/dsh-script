@@ -67,7 +67,7 @@ DeepSeek Harness 侧使用官方 Bundle、Host service、Tools 和 Client Slot�
 
 ## 当前状态
 
-当前阶段：**Stage 2 已完成，下一步进入 Stage 3 云端单用户权威**。
+当前阶段：**Stage 3 云端单用户权威进行中**。Stage 3A–3H 的宿主无关本地切片已完成，真实云服务仍未部署。
 
 已经完成：
 
@@ -85,7 +85,14 @@ Stage 2 已完成：
 - DSH exact-tarball 安装/组合/卸载验证；
 - 本地 fixture 不代表云端身份、生产认证或持久化数据。
 
-下一阶段：**Stage 3 云端单用户权威**，将实现 PostgreSQL、对象存储、服务端认证与单用户 Project/Season/Episode/Draft/Version/Approval/Canon 闭环。
+Stage 3 已完成的本地切片：
+
+- PostgreSQL authority migration shape、RLS/复合外键边界、参数化 hierarchy repository、transaction-local Team/member settings 与 node-postgres client release；
+- 不可变对象 hash/lifecycle contract、固定配置 OIDC RS256/JWKS verifier、Team-scoped authenticated API 与 Node HTTP adapter；
+- SQLite hierarchy cache 与 Draft-only offline outbox，包含幂等 enqueue、原子 claim/ack/fail、in-flight recovery 和 retry cap；
+- 全 workspace 11 个包、62 个测试文件 / 387 项测试通过 `pnpm check`、`pnpm test`、`pnpm build`、`pnpm pack:audit` 和 `git diff --check`。
+
+Stage 3 尚待外部环境：真实 PostgreSQL migration/RLS、TLS/连接池配置、OIDC discovery/token rotation/撤销、云端重连同步、S3 对象存储、Worker/outbox、PITR/恢复与生产部署。本机当前无 `psql`，配置的 Docker/Colima daemon 不可用，因此不宣称上述能力已部署。
 
 ## 开发规范
 
