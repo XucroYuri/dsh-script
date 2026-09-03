@@ -1,5 +1,6 @@
 import { DomainError } from './errors.js'
-import type { Episode, ProjectHierarchy, Season } from './model.js'
+import type { EpisodeId, SeasonId } from './ids.js'
+import type { Episode, Project, ProjectHierarchy, Season } from './model.js'
 
 function invalid(message: string): never {
   throw new DomainError('validation', message)
@@ -84,4 +85,53 @@ export function assertProjectHierarchy(hierarchy: ProjectHierarchy): void {
     if (scene?.episodeId !== beat.episodeId) invalid('Beat and Scene must belong to the same Episode.')
   }
   for (const scene of hierarchy.scenes) assertContiguous(hierarchy.beats.filter(beat => beat.sceneId === scene.id), `Beat in Scene ${scene.id}`)
+}
+
+export function createSeason(input: {
+  project: Project
+  existingSeasons: readonly Season[]
+  existingEpisodes: readonly Episode[]
+  seasonId: SeasonId
+  title: string
+  firstEpisodeId: EpisodeId
+  firstEpisodeTitle: string
+  expectedProjectRevision: number
+}): { project: Project; season: Season; episode: Episode } {
+  if (input.project.revision !== input.expectedProjectRevision) throw new DomainError('revision-conflict', 'Project revision changed before Season creation.')
+  if (input.project.status !== 'active') throw new DomainError('invalid-state', 'Archived Project cannot create a Season.')
+  if (input.project.medium !== 'episodic') throw new DomainError('invalid-state', 'Feature film cannot create another Season.')
+  assertContiguous(input.existingSeasons, 'Season')
+  if (input.existingSeasons.some(season => season.projectId !== input.project.id)) invalid('Every existing Season must belong to the Project.')
+  if (input.existingSeasons.some(season => season.id === input.seasonId)) invalid('Season ID already exists.')
+  if (input.existingEpisodes.some(episode => episode.id === input.firstEpisodeId)) invalid('Episode ID already exists.')
+  const title = input.title.trim()
+  if (!title) invalid('Season title is required.')
+  const episodeTitle = input.firstEpisodeTitle.trim()
+  if (!episodeTitle) invalid('First Episode title is required.')
+  const seasonPosition = input.existingSeasons.length + 1
+  return {
+    project: { ...input.project, revision: input.project.revision + 1 },
+    season: {
+      id: input.seasonId,
+      projectId: input.project.id,
+      title,
+      position: seasonPosition,
+      status: 'active',
+      revision: 1,
+      system: false,
+    },
+    episode: {
+      id: input.firstEpisodeId,
+      projectId: input.project.id,
+      seasonId: input.seasonId,
+      title: episodeTitle,
+      position: 1,
+      storyOrder: input.existingEpisodes.length + 1,
+      status: 'draft',
+      revision: 1,
+      primary: false,
+      currentDraftVersionId: null,
+      currentApprovedVersionId: null,
+    },
+  }
 }

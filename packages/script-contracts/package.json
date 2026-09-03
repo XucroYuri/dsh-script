@@ -12,8 +12,13 @@
       "types": "./src/governance.ts",
       "default": "./lib/governance.js"
     },
+    "./host": {
+      "types": "./src/host-contract.ts",
+      "default": "./lib/host-contract.js"
+    },
     "./testing/authoring-repository-contract": "./testing/authoring-repository-contract.ts",
-    "./testing/governance-repository-contract": "./testing/governance-repository-contract.ts"
+    "./testing/governance-repository-contract": "./testing/governance-repository-contract.ts",
+    "./testing/host-adapter-parity-contract": "./testing/host-adapter-parity-contract.ts"
   },
   "scripts": {
     "precheck": "pnpm --filter @script-studio/domain build",

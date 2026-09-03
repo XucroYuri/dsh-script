@@ -117,6 +117,41 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)
 
+  plugins/codex-script-studio:
+    dependencies:
+      '@script-studio/contracts':
+        specifier: workspace:*
+        version: link:../../packages/script-contracts
+    devDependencies:
+      '@script-studio/application':
+        specifier: workspace:*
+        version: link:../../packages/script-application
+      '@script-studio/domain':
+        specifier: workspace:*
+        version: link:../../packages/script-domain
+      '@script-studio/dsh-adapter':
+        specifier: workspace:*
+        version: link:../dsh-script-studio
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)
+
+  plugins/dsh-script-studio:
+    dependencies:
+      '@script-studio/contracts':
+        specifier: workspace:*
+        version: link:../../packages/script-contracts
+    devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.13.3)
+
 packages:
 
   '@deepseek-ai/cordis-plugin-include@1.0.6':

@@ -6,6 +6,7 @@
       "@script-studio/domain/governance": ["../script-domain/src/governance.ts"],
       "@script-studio/contracts": ["../script-contracts/src/index.ts"],
       "@script-studio/contracts/governance": ["../script-contracts/src/governance.ts"],
+      "@script-studio/contracts/host": ["../script-contracts/src/host-contract.ts"],
       "@script-studio/contracts/testing/authoring-repository-contract": ["../script-contracts/testing/authoring-repository-contract.ts"],
       "@script-studio/contracts/testing/governance-repository-contract": ["../script-contracts/testing/governance-repository-contract.ts"]
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { asEpisodeId, assertProjectHierarchy, asSeasonId, type ProjectMedium } from '../src/index.js'
+import { asEpisodeId, assertProjectHierarchy, asSeasonId, createSeason, type ProjectMedium } from '../src/index.js'
 import { hierarchy } from './fixtures.js'
 
 describe('screenplay project media', () => {
@@ -37,5 +37,14 @@ describe('screenplay project media', () => {
     value.scenes = []
     value.beats = []
     expect(() => assertProjectHierarchy(value)).toThrow('must contain at least one Episode')
+  })
+
+  it('creates a Season only for an active episodic Project at the expected revision', () => {
+    const value = hierarchy()
+    const input = { project: value.project, existingSeasons: value.seasons, existingEpisodes: value.episodes, seasonId: asSeasonId('season-2'), title: ' 第二季 ', firstEpisodeId: asEpisodeId('episode-2'), firstEpisodeTitle: ' 第一集 ', expectedProjectRevision: 1 }
+    const created = createSeason(input)
+    expect(created).toMatchObject({ project: { revision: 2 }, season: { title: '第二季', position: 2, revision: 1, system: false }, episode: { title: '第一集', position: 1, storyOrder: 2, revision: 1 } })
+    expect(() => createSeason({ ...input, project: { ...value.project, medium: 'feature-film' } })).toThrow('cannot create another Season')
+    expect(() => createSeason({ ...input, expectedProjectRevision: 0 })).toThrow('revision')
   })
 })
