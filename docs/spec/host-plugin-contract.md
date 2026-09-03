@@ -145,6 +145,32 @@ plugins/dsh-script-studio/
 
 不支持的能力必须隐藏并给出可诊断原因，不能由插件本地伪造成功。
 
+### Stage 2 Contract v1
+
+首个共享 Host Contract 冻结为 `1.0.0`，与产品版本和未来 HTTP 路由版本分离。major 不一致直接拒绝；minor/patch 通过 capability 协商降级。
+
+首切片能力：
+
+- `hierarchyRead: true`；
+- `commandCreateSeason: true`；
+- `authSession: false`；
+- `eventStream: false`；
+- `hostModelGateway: false`；
+- `interactiveAppSurface: false`；
+- `telemetry: false`。
+
+首切片只使用内存 DevHostApi，支持 `capabilities / get-project-hierarchy / create-season`。Codex/DSH 两个 TypeScript adapter 必须运行同一个 parity contract，除 HostIdentity 外，对相同 actor/request 返回相同 result、error code、revision 和 idempotency replay。真实 Codex manifest/MCP 进程与 DSH Bundle 生命周期在下一切片核验。
+
+### Stage 2 Composition v1
+
+Stage 2 的可验证组合边界固定为同一个 `/api/script-studio/v1/host` 请求信封：
+
+- Codex plugin 使用 `.codex-plugin/plugin.json`、`skills/` 和 `.mcp.json`；MCP server 通过标准 stdio JSON-RPC 暴露 `script_studio_capabilities`、`script_studio_get_project_hierarchy` 和 `script_studio_create_season`，三者只调用共享 `ScriptStudioHostApiPort`；
+- DSH Bundle 使用 `cordis.patch.yml` 插入包，Host 通过公开 `ctx.webServer.register()` 和 `ctx.tools.register(defineTool())` 暴露同一组能力，Client 通过公开 `ctx.slots.register()` 提供入口和工作台；
+- 本地组合使用确定性的内存 DevHostApi fixture，默认 actor 仅用于开发验证。它不是认证、Team 会话或持久化实现；所有真实授权、云数据和身份能力留到 Stage 3；
+- `HostResponseEnvelope` 是两个宿主唯一的业务结果边界。适配器只能填充 `HostIdentity`，不得复制 Team/IP/Project/Season/Episode 规则，不得连接数据库或对象存储；
+- MCP/DSH 工具的错误必须保留稳定 `ApiError.code`，不得以中文错误文本作为业务判定依据。插件卸载只移除入口、工具和 Bundle 组合，不删除共享数据。
+
 ## 8. 发布与兼容
 
 - Core/API 使用语义化 contract version；

@@ -80,6 +80,8 @@
 
 ### Stage 2：双宿主最小垂直闭环
 
+状态：进行中（Host Contract 与内存 API 切片已完成，组合切片待验收）。
+
 范围：
 
 - 创建 `plugins/codex-script-studio`；
@@ -88,6 +90,13 @@
 - Codex 首版使用 `.codex-plugin/plugin.json + Skills + MCP`；
 - DSH 使用 Bundle + Host service + Client Slot；
 - 两宿主连接同一个本地开发 API，完成只读 Team/IP/Project 和单个命令闭环。
+
+当前组合切片：
+
+- Codex plugin manifest、Skills、MCP stdio server 与 Host Contract v1；
+- DSH Bundle patch、公开 Host HTTP/tool 入口与 Client Slot；
+- 两宿主用同一内存 DevHostApi fixture 完成 capabilities、hierarchy read、create-season、forbidden 和 idempotency replay；
+- 组合测试只验证插件生命周期和业务契约，不把本地 fixture 描述为云端或生产认证。
 
 退出门：
 
