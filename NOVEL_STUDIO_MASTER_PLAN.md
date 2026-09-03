@@ -3836,6 +3836,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3B 不可变对象生命周期契约 | 进行中（契约切片已完成） | 新增 `@script-studio/infra-object-store` 与 `@script-studio/contracts/object-store`：SHA-256、Team-scoped object key、put-if-absent/read 端口和 pending/ready/failed 生命周期已冻结。4 项生命周期测试、类型检查和构建通过；真实 S3/兼容对象存储、签名 URL、数据库事务与恢复演练留待后续门禁。 |
 | Script Studio v2 Stage 3C 认证云 API 只读边界 | 进行中（只读切片已完成） | 新增 `@script-studio/contracts/cloud-api` 与 `@script-studio/script-api`：Bearer session verifier、VerifiedCloudSession、Team-scoped hierarchy route 和稳定错误响应已冻结。4 项 API 测试、类型检查和构建通过；真实 OIDC、PostgreSQL query/transaction、写命令和部署留待后续门禁。 |
 | Script Studio v2 Stage 3D PostgreSQL hierarchy query/transaction port | 进行中（读事务切片已完成） | 新增 `PostgresHierarchyRepository`、`PostgresTransactionalHierarchyRepository` 与 `withTenantTransaction`：完整 verified session 贯穿 API/事务/repository，参数化 Team/Project 查询、层级行映射、PostgreSQL numeric 归一化、transaction-local Team/member settings 和 rollback 边界已冻结。8 项 infra-postgres 测试、全仓库 check/test/build、发行包 pack audit 与格式检查通过；具体 driver、真实 RLS、OIDC/HTTP 和部署留待后续门禁。 |
+| Script Studio v2 Stage 3E OIDC RS256 verifier | 进行中（固定配置 verifier 切片已完成） | 新增独立 `@script-studio/infra-oidc`：固定 issuer/audience/JWKS、RS256/RSA `kid` 校验、签名与时间 claims 验证、Team/member 映射、JWKS cache/key rotation refresh 和 token/header 安全拒绝已冻结。5 项 RSA verifier 测试、全 workspace 60 个测试文件 / 378 项测试、类型检查、构建、发行包审计和格式检查通过；真实 issuer discovery、nonce、token rotation/撤销、HTTP composition 和 IdP 留待后续门禁。 |
 
 ---
 
