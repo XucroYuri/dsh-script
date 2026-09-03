@@ -20,6 +20,10 @@ interface SuccessBody {
 
 export type ScriptStudioApiResult = ScriptStudioApiResponse<SuccessBody | ErrorBody>
 
+export interface ScriptStudioApiPort {
+  handle(request: ScriptStudioApiRequest): Promise<ScriptStudioApiResult>
+}
+
 function header(headers: Readonly<Record<string, string | undefined>>, name: string): string | undefined {
   const expected = name.toLowerCase()
   const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === expected)?.[1]
@@ -49,7 +53,7 @@ function failure(requestId: string, status: number, cause: unknown): ScriptStudi
   }
 }
 
-export class ScriptStudioApi {
+export class ScriptStudioApi implements ScriptStudioApiPort {
   constructor(
     private readonly sessions: AccessTokenVerifierPort,
     private readonly hierarchy: CloudHierarchyRepositoryPort,

@@ -263,6 +263,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/script-domain
     devDependencies:
+      '@types/node':
+        specifier: ^24.3.0
+        version: 24.13.3
       typescript:
         specifier: ^5.9.2
         version: 5.9.3

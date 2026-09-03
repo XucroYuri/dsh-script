@@ -12,7 +12,10 @@ interface SuccessBody {
     result: GetProjectHierarchyResponse;
 }
 export type ScriptStudioApiResult = ScriptStudioApiResponse<SuccessBody | ErrorBody>;
-export declare class ScriptStudioApi {
+export interface ScriptStudioApiPort {
+    handle(request: ScriptStudioApiRequest): Promise<ScriptStudioApiResult>;
+}
+export declare class ScriptStudioApi implements ScriptStudioApiPort {
     private readonly sessions;
     private readonly hierarchy;
     constructor(sessions: AccessTokenVerifierPort, hierarchy: CloudHierarchyRepositoryPort);
