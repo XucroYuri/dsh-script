@@ -55,6 +55,8 @@ PostgreSQL hierarchy 查询切片补充以下边界：repository 的 root 与五
 
 所有租户表必须有 `team_id`，使用复合外键或等价约束防止跨 Team 引用，并在 PostgreSQL 启用 Row Level Security。应用服务仍执行授权，RLS 是第二道防线。
 
+具体 node-postgres adapter 必须为一个 hierarchy transaction checkout 一个 client，在同一 client 上顺序执行 `BEGIN`、transaction-local settings、查询和 `COMMIT/ROLLBACK`，并在成功或异常路径 `finally` release；不能用 `pool.query` 分发事务语句。连接池大小、TLS 校验和 idle/connection timeout 属于部署配置，不能由请求参数覆盖。
+
 ### S3 兼容对象存储
 
 大对象与不可变内容：

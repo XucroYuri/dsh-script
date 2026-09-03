@@ -170,6 +170,7 @@
 
 - 用具体 PostgreSQL driver/连接池执行 migration 与 hierarchy 读事务，并在可用数据库中验证 RLS/复合外键；
 - 将固定配置的 verifier 与事务化 hierarchy repository 接入同一生产 composition，保持 Team scope 只来自 verified session；
+- 用 node-postgres 的同一 checked-out client 执行单事务，并在所有路径 release；pool.query 仅允许单语句非事务场景；
 - 在具备外部服务配置时接入 issuer discovery、token rotation、撤销策略和真实 PostgreSQL RLS；
 - token rotation、真实云 API 部署和生产 observability 留待具备外部服务配置的后续门禁；
 - 在可用 PostgreSQL/对象存储运行环境接通真实事务、对象 hash 和恢复演练。

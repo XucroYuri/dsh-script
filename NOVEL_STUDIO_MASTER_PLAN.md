@@ -3784,6 +3784,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 原因：Node/Hono/其他 HTTP 框架不能复制认证、Team scope 或领域错误规则。Stage 3F 冻结 `createScriptStudioHttpHandler`：从 `IncomingMessage` 提取 pathname、headers 和经过约束的 request ID，调用既有 `ScriptStudioApi`，返回 JSON、`no-store` 与原始 API status；adapter 不解析 Bearer、不接触数据库、不记录 token 或正文，未知内部异常统一为安全的 500 响应。TLS、代理信任、限流、监听配置和生产部署继续由宿主/平台层负责。
 
+### ADR-118：PostgreSQL 事务使用同一 checked-out client 并总是 release
+
+状态：Accepted
+
+原因：node-postgres 的 transaction 状态绑定单个 client，使用 `pool.query` 分发 `BEGIN`/查询会破坏事务隔离，遗忘 release 会耗尽连接池。Stage 3G 冻结 `PostgresTransactionProviderPort` 的 open/release 生命周期与 `PgTransactionProvider`：每次事务从 `Pool.connect()` checkout 一个 client，所有语句走同一 client，`PostgresTransactionalHierarchyRepository` 在 commit/rollback 后 finally release；连接池和 TLS 只接受服务端配置，不接受请求输入。当前先通过可注入 fake pool 验证生命周期，真实数据库/RLS 运行仍待外部环境。
+
 ---
 
 ## 23. 实施状态
@@ -3844,6 +3850,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3D PostgreSQL hierarchy query/transaction port | 进行中（读事务切片已完成） | 新增 `PostgresHierarchyRepository`、`PostgresTransactionalHierarchyRepository` 与 `withTenantTransaction`：完整 verified session 贯穿 API/事务/repository，参数化 Team/Project 查询、层级行映射、PostgreSQL numeric 归一化、transaction-local Team/member settings 和 rollback 边界已冻结。8 项 infra-postgres 测试、全仓库 check/test/build、发行包 pack audit 与格式检查通过；具体 driver、真实 RLS、OIDC/HTTP 和部署留待后续门禁。 |
 | Script Studio v2 Stage 3E OIDC RS256 verifier | 进行中（固定配置 verifier 切片已完成） | 新增独立 `@script-studio/infra-oidc`：固定 issuer/audience/JWKS、RS256/RSA `kid` 校验、签名与时间 claims 验证、Team/member 映射、JWKS cache/key rotation refresh 和 token/header 安全拒绝已冻结。5 项 RSA verifier 测试、全 workspace 60 个测试文件 / 378 项测试、类型检查、构建、发行包审计和格式检查通过；真实 issuer discovery、nonce、token rotation/撤销、HTTP composition 和 IdP 留待后续门禁。 |
 | Script Studio v2 Stage 3F API HTTP composition | 进行中（无框架 adapter 切片已完成） | 新增 `createScriptStudioHttpHandler`：Node request 到稳定 API request 的 pathname/header/requestId 转换、JSON/no-store 响应和安全异常屏障已冻结。7 项 service-api 测试、全 workspace 61 个测试文件 / 381 项测试、类型检查、构建、发行包审计和格式检查通过；TLS/代理/限流、真实数据库/IdP、部署与 observability 留待后续门禁。 |
+| Script Studio v2 Stage 3G PostgreSQL driver 生命周期 | 进行中（设计已冻结） | 计划让 node-postgres 使用同一 checked-out client 执行 transaction port，并在 commit/rollback 后统一 release；验证 pool.query 不被用于事务、连接池配置不受请求覆盖。真实 PostgreSQL/RLS 与外部连接配置留待后续门禁。 |
 
 ---
 
