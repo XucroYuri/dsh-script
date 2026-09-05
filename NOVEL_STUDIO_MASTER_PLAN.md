@@ -3798,6 +3798,12 @@ Harness ctx.llm.stream() 发出 text-delta
 
 ---
 
+### ADR-120：Stage 2 开发面板使用非模态抽屉和服务端能力协商
+
+状态：Accepted
+
+原因：开发 fixture 入口不能阻断宿主主界面，也不能把本地验证能力展示为生产工作区。保留 sidebar.footer.action / shell.overlay，以透明、pointer-events:none 的外层和可交互的右侧 dialog 实现背景穿透；通过触发按钮引用恢复焦点，不查询宿主 DOM，不设置 aria-modal 或焦点陷阱。typed locale 集中 UI 文案，adapter 私有模块集中客户端 fixture 身份与项目常量。打开时先协商 capabilities，未知/不可用能力不开放写操作，失败显示可重试状态。本轮 jsdom 与仓库自动化通过；真实 DSH composition 因本轮禁止启动项目未执行，修复验收仍待补齐，不推进后续初始化阶段。
+
 ## 23. 实施状态
 
 > 主对话每完成一个里程碑后更新此处。
@@ -3858,6 +3864,7 @@ Harness ctx.llm.stream() 发出 text-delta
 | Script Studio v2 Stage 3F API HTTP composition | 进行中（无框架 adapter 切片已完成） | 新增 `createScriptStudioHttpHandler`：Node request 到稳定 API request 的 pathname/header/requestId 转换、JSON/no-store 响应和安全异常屏障已冻结。7 项 service-api 测试、全 workspace 61 个测试文件 / 381 项测试、类型检查、构建、发行包审计和格式检查通过；TLS/代理/限流、真实数据库/IdP、部署与 observability 留待后续门禁。 |
 | Script Studio v2 Stage 3G PostgreSQL driver 生命周期 | 进行中（driver 生命周期切片已完成） | `pg@8.23.0` 的 `PgTransactionProvider` 使用同一 checked-out client 执行 transaction port，并在 commit/rollback 后统一 release；9 项 infra-postgres 测试、全 workspace 61 个测试文件 / 382 项测试、类型检查、构建、发行包审计和格式检查通过。真实 PostgreSQL/RLS、TLS、migration、外部连接配置与生产 composition 留待后续门禁。 |
 | Script Studio v2 Stage 3H SQLite cache/outbox | 进行中（本地离线切片已完成） | 新增独立 `@script-studio/infra-sqlite-cache`：Team/Project hierarchy 快照、Draft-only payload、幂等 outbox、原子 claim/ack/fail、in-flight recovery 与 retry cap 已冻结。5 项 SQLite 测试、全 workspace 62 个测试文件 / 387 项测试、类型检查、构建、发行包审计和格式检查通过；本地缓存加密、真实云端重连同步、PostgreSQL/RLS、对象存储和部署留待后续门禁。 |
+| Script Studio 针对性迭代：Stage 2 开发抽屉 | 本地实现已完成，整体验收待补 | 9 项新增 jsdom 测试覆盖非阻塞样式、ARIA、Escape/焦点、loading/ready/error/retry/busy、能力降级、契约版本拒绝和 Slot 清理；3 项既有 Host parser 测试通过。全仓库 59 文件 / 395 项测试、check/build、双 pack audit 通过。真实 composition、Host route/tool smoke、卸载和 exact-package 安装需启动临时 Harness，按本轮限制未运行；阶段二/三未推进。详见 `docs/verification/stage-2-drawer-2026-09-05.md`。 |
 
 ---
 

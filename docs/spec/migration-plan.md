@@ -275,3 +275,13 @@ Stage 3A–3H 的宿主无关本地切片已完成；下一步进入具备外部
 3. 接入 SQLite outbox 的认证重连同步与服务端 idempotency 响应，验证重复/断网/恢复行为；
 4. 接通 S3 兼容对象存储、签名 URL、transactional outbox worker、PITR 和对象版本恢复；
 5. 不在 Stage 3 提前实现 CRDT 实时协作，协作属于 Stage 4。
+
+## 6. 针对性迭代（2026-09-05）
+
+当前规范阶段仍为 Stage 3；先回补 Stage 2 非阻塞开发抽屉，再补共享初始化契约，最后按 PostgreSQL/RLS → OIDC/账号 bootstrap → hierarchy/服务端草稿 → outbox 重连 → 正式向导顺序接线。每步通过聚焦检查后推进，真实外部服务门禁未通过不得用 fixture 替代。
+
+本轮首个假设：保留公开 Slot，把指针接收限制在抽屉自身，即可让宿主主界面保持可操作；jsdom 检查 pointer-events、ARIA、Escape、焦点恢复、错误重试和能力降级可证伪交互实现。当前切片不修改 schema 或用户数据，不需要数据迁移；回退仅涉及插件代码。
+
+状态：Stage 2 面板代码与本地自动化检查已完成；本轮阶段一整体验收未完成，不推进阶段二/三。9 项新增 jsdom 测试、3 项既有 Host parser 测试、全仓库 59 个测试文件 / 395 项测试、check/build、历史与 DSH pack audit 通过。真实 DSH composition 脚本会启动 Harness Web，与本轮禁止启动项目的边界冲突，故未运行；Host route、tool smoke、真实卸载与 exact-package 安装仍需在允许临时测试进程后补验。jsdom 不提供浏览器像素或命中测试证据。
+
+验证记录：[Stage 2 面板针对性迭代](../verification/stage-2-drawer-2026-09-05.md)。本轮不改变 Stage 2 原有历史退出记录，也不把本次修复标记为已通过全部门禁。

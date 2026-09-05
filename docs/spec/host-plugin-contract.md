@@ -171,6 +171,12 @@ Stage 2 的可验证组合边界固定为同一个 `/api/script-studio/v1/host` 
 - `HostResponseEnvelope` 是两个宿主唯一的业务结果边界。适配器只能填充 `HostIdentity`，不得复制 Team/IP/Project/Season/Episode 规则，不得连接数据库或对象存储；
 - MCP/DSH 工具的错误必须保留稳定 `ApiError.code`，不得以中文错误文本作为业务判定依据。插件卸载只移除入口、工具和 Bundle 组合，不删除共享数据。
 
+### Stage 2 非阻塞开发抽屉
+
+DSH 入口固定显示“剧本工作室 · 开发验证”，仍注册 `sidebar.footer.action` 与 `shell.overlay`。overlay 外层透明并使用 `pointer-events: none`，仅右侧抽屉接收指针；不得修改宿主空状态、锁定页面滚动或查询宿主 DOM。抽屉使用非模态 dialog、独立标题和描述、关闭按钮、Escape 关闭与触发按钮引用恢复焦点；不使用 aria-modal=true 或焦点陷阱。
+
+所有 UI 文案由 typed locale 字典提供；fixture 身份与项目 ID 放在 adapter 私有模块。打开先协商 capabilities，再按支持能力读取层级；loading、ready、error/retry 与 busy 状态可辨别。能力未知或不可用时不开放写操作，徽标使用响应值并标明不可用。始终标注“Stage 2 / 本地开发 fixture”，不得据此宣称生产能力。
+
 ## 8. 发布与兼容
 
 - Core/API 使用语义化 contract version；

@@ -4,6 +4,8 @@
 
 当前能力仅用于本地组合验证：读取固定开发夹具的 Team/IP/Project/Season/Episode 层级，并创建 Season 与第一集。它不声明云端权限、实时协作、Canon 推进或生产数据能力。卸载 Bundle 不会删除共享数据。
 
+入口为“剧本工作室 · 开发验证”，打开右侧非阻塞抽屉。背景可穿透，Escape 或关闭按钮关闭后恢复入口焦点；面板先协商 capabilities，不支持的操作不会开放。所有内容明确标注“Stage 2 / 本地开发 fixture”。
+
 构建与验证：
 
 ```bash
