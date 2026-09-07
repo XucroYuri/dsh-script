@@ -28,6 +28,7 @@
     "build": "node scripts/build.mjs",
     "prepack": "node scripts/build.mjs",
     "check": "tsc -p tsconfig.json",
+    "pretest": "pnpm -C ../../packages/script-domain run build && pnpm -C ../../packages/script-contracts run build && pnpm -C ../../packages/script-application run build",
     "test": "vitest run",
     "test:composition": "node tests/composition-smoke.mjs",
     "pack:audit": "node scripts/pack-audit.mjs",
